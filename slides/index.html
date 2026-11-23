@@ -1,0 +1,2019 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>大地測量學 (Geodesy) 零基礎圖解教學簡報</title>
+  <style>
+    :root {
+      --bg-dark: #0f172a;
+      --card-bg: #ffffff;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --primary: #0284c7;
+      --primary-light: #e0f2fe;
+      --accent: #16a34a;
+      --accent-light: #dcfce7;
+      --warning: #d97706;
+      --warning-light: #fef3c7;
+      --danger: #dc2626;
+      --border: #e2e8f0;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Microsoft JhengHei", "微軟正黑體", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow-x: hidden;
+      user-select: none;
+    }
+
+    /* 頂部進度條 */
+    #progress-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      z-index: 100;
+    }
+
+    #progress-bar {
+      height: 100%;
+      width: 3.45%;
+      background: linear-gradient(90deg, #38bdf8, #0284c7);
+      transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* 投影片主容器 */
+    #deck-wrapper {
+      width: 100%;
+      max-width: 1360px;
+      height: 88vh;
+      min-height: 680px;
+      padding: 16px 24px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .slide {
+      background: var(--card-bg);
+      border-radius: 16px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+      width: 100%;
+      height: 100%;
+      display: none;
+      flex-direction: column;
+      padding: 28px 36px 20px 36px;
+      animation: fadeIn 0.35s ease-out;
+      overflow-y: auto;
+    }
+
+    .slide.active {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* 標題區域 */
+    .slide-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 12px;
+      margin-bottom: 16px;
+    }
+
+    .header-left {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .unit-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 20px;
+      width: fit-content;
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+
+    .slide-title {
+      font-size: 24px;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -0.5px;
+    }
+
+    .slide-counter {
+      font-size: 22px;
+      font-weight: 900;
+      color: #94a3b8;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .slide-counter span {
+      color: var(--primary);
+    }
+
+    /* 核心內容雙欄網格 */
+    .slide-body {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 28px;
+      flex: 1;
+      align-items: center;
+      min-height: 0;
+    }
+
+    /* 左側解說卡片群 */
+    .narrative-col {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      height: 100%;
+      justify-content: center;
+    }
+
+    .analogy-card {
+      background: #f8fafc;
+      border-left: 5px solid var(--warning);
+      padding: 12px 16px;
+      border-radius: 0 8px 8px 0;
+    }
+
+    .analogy-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--warning);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+
+    .analogy-text {
+      font-size: 14.5px;
+      line-height: 1.55;
+      color: #334155;
+    }
+
+    .key-points-card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .key-points-card h4 {
+      font-size: 14px;
+      font-weight: 800;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .key-points-card ul {
+      list-style-type: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .key-points-card li {
+      font-size: 13.5px;
+      line-height: 1.5;
+      color: #334155;
+      position: relative;
+      padding-left: 18px;
+    }
+
+    .key-points-card li::before {
+      content: "•";
+      color: var(--primary);
+      position: absolute;
+      left: 4px;
+      font-weight: bold;
+      font-size: 16px;
+    }
+
+    .formula-badge {
+      background: #f1f5f9;
+      border: 1px dashed #cbd5e1;
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-family: "Consolas", "Fira Code", monospace;
+      font-size: 14px;
+      color: #0369a1;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* 右側 SVG 圖解卡片 */
+    .visual-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #f8fafc;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+      height: 100%;
+    }
+
+    .visual-col svg {
+      width: 100%;
+      height: auto;
+      max-height: 380px;
+      display: block;
+    }
+
+    /* 底部資訊列 */
+    .slide-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid var(--border);
+      padding-top: 12px;
+      margin-top: 12px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .source-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #475569;
+      font-weight: 600;
+      background: #f1f5f9;
+      padding: 4px 10px;
+      border-radius: 6px;
+    }
+
+    .source-tag b {
+      color: var(--primary);
+    }
+
+    .keyboard-hint {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+    }
+
+    .key-cap {
+      background: #e2e8f0;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-weight: 700;
+      color: #334155;
+      box-shadow: 0 1px 0 #cbd5e1;
+    }
+
+    /* 導航控制列 */
+    #nav-controls {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin-top: 8px;
+    }
+
+    .nav-btn {
+      background: #1e293b;
+      color: #ffffff;
+      border: 1px solid #334155;
+      padding: 8px 18px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .nav-btn:hover {
+      background: var(--primary);
+      border-color: var(--primary);
+      transform: translateY(-1px);
+    }
+
+    .nav-btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    #jump-select {
+      background: #1e293b;
+      color: #f8fafc;
+      border: 1px solid #334155;
+      padding: 7px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      outline: none;
+    }
+
+    #jump-select option {
+      background: #0f172a;
+      color: #f8fafc;
+    }
+
+    /* 響應式優化 */
+    @media (max-width: 1024px) {
+      .slide-body {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+      #deck-wrapper {
+        height: auto;
+        min-height: 94vh;
+      }
+      .visual-col {
+        max-height: 300px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 頂部即時進度條 -->
+  <div id="progress-container">
+    <div id="progress-bar"></div>
+  </div>
+
+  <div id="deck-wrapper">
+
+    <!-- ==================== SLIDE 01 ==================== -->
+    <div class="slide active" data-slide="1" data-unit="第一單元：地球真實面貌" data-source="wiki/topic_01_地球形狀與幾何物理特徵.md">
+      <div class="slide-header">
+        <div class="header-left">
+          <span class="unit-badge">第一單元：地球真實面貌</span>
+          <h2 class="slide-title">01. 課程導言——為什麼地球不是完美的球體？</h2>
+        </div>
+        <div class="slide-counter"><span>01</span> / 29</div>
+      </div>
+      <div class="slide-body">
+        <div class="narrative-col">
+          <div class="analogy-card">
+            <div class="analogy-title">💡 零基礎白話比喻</div>
+            <div class="analogy-text">想像你手裡握著一團軟黏土，把它放在陶藝轉盤上飛速旋轉，黏土中間會被甩得鼓出來、上下兩頭凹下去。地球不是堅硬鋼珠，而是旋轉了四十幾億年的彈性巨星！</div>
+          </div>
+          <div class="key-points-card">
+            <h4>📌 核心幾何物理認知</h4>
+            <ul>
+              <li><b>基本物理數據</b>：表面積約 5.1 億 km²，地球質量約 5.976 × 10²⁴ kg。</li>
+              <li><b>海陸不對稱</b>：海洋占 70.8%（均深 3900 m），陸地占 29.2%（均高 840 m），地表最大地貌起伏達 19.9 km。</li>
+              <li><b>大地測量三大任務</b>：測定地球幾何形狀、外部重力場及其隨時間的微幅動態演化。</li>
+            </ul>
+          </div>
+          <div class="formula-badge">幾何扁率：α = (a - b) / a ≈ 1 / 298.25 （赤道比兩極長約 21 公里）</div>
+        </div>
+        <div class="visual-col">
+          <svg viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+            <rect width="800" height="400" fill="#f8fafc" rx="12"/>
+            <circle cx="400" cy="200" r="160" fill="none" stroke="#94a3b8" stroke-dasharray="6,6" stroke-width="2"/>
+            <text x="400" y="30" text-anchor="middle" font-size="14" fill="#64748b" font-weight="bold">虛線：幾何正球體 (R = 6371 km)</text>
+            <ellipse cx="400" cy="200" rx="180" ry="145" fill="#e0f2fe" stroke="#0284c7" stroke-width="3" opacity="0.8"/>
+            <line x1="400" y1="35" x2="400" y2="375" stroke="#dc2626" stroke-width="2.5"/>
+            <polygon points="400,20 393,35 407,35" fill="#dc2626"/>
+            <text x="415" y="370" font-size="13" fill="#dc2626" font-weight="bold">地軸 (自轉軸 Z)</text>
+            <line x1="400" y1="200" x2="580" y2="200" stroke="#0f172a" stroke-width="2.5"/>
+            <polygon points="580,200 570,194 570,206" fill="#0f172a"/>
+            <text x="490" y="190" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="bold">長半軸 a = 6378 km</text>
+            <line x1="400" y1="200" x2="400" y2="55" stroke="#0f172a" stroke-width="2.5"/>
+            <polygon points="400,55 394,65 406,65" fill="#0f172a"/>
+            <text x="330" y="125" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="bold">短半軸 b = 6357 km</text>
+            <rect x="520" y="70" width="245" height="85" rx="8" fill="#ffffff" stroke="#0284c7" stroke-width="1.5"/>
+            <text x="535" y="95" font-size="13" fill="#0369a1" font-weight="bold">幾何扁率 α = (a - b) / a</text>
+            <text x="535" y="118" font-size="13" fill="#334155">地球扁率約 1 / 298.25</text>
+            <text x="535" y="140" font-size="12" fill="#dc2626" font-weight="bold">赤道半徑比極半徑長約 21 公里！</text>
+          </svg>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span class="source-tag">文獻依據：<b>wiki/topic_01</b> (raw/05.md.md p.1-18)</span>
+        <div class="keyboard-hint">切換：<span class="key-cap">←</span> <span class="key-cap">→</span> 或 <span class="key-cap">Space</span></div>
+      </div>
+    </div>
+
+    <!-- ==================== SLIDE 02 ==================== -->
+    <div class="slide" data-slide="2" data-unit="第一單元：地球真實面貌" data-source="wiki/topic_01_地球形狀與幾何物理特徵.md">
+      <div class="slide-header">
+        <div class="header-left">
+          <span class="unit-badge">第一單元：地球真實面貌</span>
+          <h2 class="slide-title">02. 地球的幾何畸形——三軸橢球與「梨形」地球</h2>
+        </div>
+        <div class="slide-counter"><span>02</span> / 29</div>
+      </div>
+      <div class="slide-body">
+        <div class="narrative-col">
+          <div class="analogy-card">
+            <div class="analogy-title">💡 零基礎白話比喻</div>
+            <div class="analogy-text">地球其實不是個對稱的壓扁橘子，而是一顆「微微發胖的洋梨」！北極像梨子把兒稍微頂起，南極像梨屁股微微下凹，中間赤道切開甚至也不是正圓形。</div>
+          </div>
+          <div class="key-points-card">
+            <h4>📌 奇妙的不對稱特徵</h4>
+            <ul>
+              <li><b>三軸橢球特徵</b>：赤道本身呈橢圓，長短軸差約 211 m，長軸指向西經 35°。</li>
+              <li><b>梨形落差 (Pear Shape)</b>：衛星軌道攝動分析表明，北極凸出約 10 m，南極下凹約 10 m，南北極兩端存在約 <b>20 公尺</b> 的幾何落差。</li>
+              <li><b>實務折衷</b>：因旋轉橢球與大地水準面極為密合且公式單純，工程上仍以旋轉橢球為代表。</li>
+            </ul>
+          </div>
+          <div class="formula-badge">南北極幾何不對稱落差：約 20 公尺（由人造衛星軌道分析驗證）</div>
+        </div>
+        <div class="visual-col">
+          <svg viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+            <rect width="800" height="400" fill="#f8fafc" rx="12"/>
+            <ellipse cx="400" cy="200" rx="180" ry="140" fill="none" stroke="#94a3b8" stroke-dasharray="5,5" stroke-width="2"/>
+            <text x="400" y="35" text-anchor="middle" font-size="13" fill="#64748b">灰虛線：理論對稱旋轉橢球</text>
+            <path d="M 400,45 C 470,45 570,120 580,200 C 590,280 480,355 400,355 C 320,355 210,280 220,200 C 230,120 330,45 400,45 Z" fill="#fef3c7" stroke="#d97706" stroke-width="3" opacity="0.85"/>
+            <line x1="400" y1="45" x2="400" y2="60" stroke="#dc2626" stroke-width="3"/>
+            <circle cx="400" cy="45" r="4" fill="#dc2626"/>
+            <text x="420" y="55" font-size="13" fill="#b45309" font-weight="bold">北極隆起 (+10 m)</text>
+            <line x1="400" y1="340" x2="400" y2="355" stroke="#dc2626" stroke-width="3"/>
+            <circle cx="400" cy="355" r="4" fill="#dc2626"/>
+            <text x="420" y="355" font-size="13" fill="#b45309" font-weight="bold">南極凹陷 (-10 m)</text>
+            <rect x="50" y="140" width="190" height="90" rx="8" fill="#ffffff" stroke="#d97706" stroke-width="1.5"/>
+            <text x="60" y="165" font-size="13" fill="#b45309" font-weight="bold">「梨形」落差約 20 m</text>
+            <text x="60" y="190" font-size="12" fill="#475569">由衛星軌道攝動反求</text>
+            <text x="60" y="210" font-size="12" fill="#64748b">工程上仍用旋轉橢球</text>
+          </svg>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span class="source-tag">文獻依據：<b>wiki/topic_01</b> (raw/05.md.md p.2-4)</span>
+        <div class="keyboard-hint">切換：<span class="key-cap">←</span> <span class="key-cap">→</span></div>
+      </div>
+    </div>
+
+    <!-- ==================== SLIDE 03 ==================== -->
+    <div class="slide" data-slide="3" data-unit="第一單元：地球真實面貌" data-source="wiki/topic_01_地球形狀與幾何物理特徵.md">
+      <div class="slide-header">
+        <div class="header-left">
+          <span class="unit-badge">第一單元：地球真實面貌</span>
+          <h2 class="slide-title">03. 火箭發射的秘密——地球自轉與線速度</h2>
+        </div>
+        <div class="slide-counter"><span>03</span> / 29</div>
+      </div>
+      <div class="slide-body">
+        <div class="narrative-col">
+          <div class="analogy-card">
+            <div class="analogy-title">💡 零基礎白話比喻</div>
+            <div class="analogy-text">旋轉木馬最外圈的小朋友跑得最快，轉軸中心的人卻在原地打轉。地球自轉時，赤道就是最外圈，站在赤道上你每秒鐘就跟著地球狂奔 465 公尺！</div>
+          </div>
+          <div class="key-points-card">
+            <h4>📌 自轉線速度與太空應用</h4>
+            <ul>
+              <li><b>自轉角速度</b>：ω ≈ 7.292115 × 10⁻⁵ rad/s（全球等角速 24 小時一圈）。</li>
+              <li><b>線速度公式</b>：V = (2πR cosφ) / T = V_赤道 · cosφ。</li>
+              <li><b>航太選址</b>：赤道線速度高達 <b>465 m/s</b>，兩極為 0。發射場設在赤道向東發射，可白嫖近半公里的初速度以節省燃料！</li>
+            </ul>
+          </div>
+          <div class="formula-badge">線速度：赤道 V = 465 m/s ； 北京 V = 355 m/s ； 兩極 V = 0 m/s</div>
+        </div>
+        <div class="visual-col">
+          <svg viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+            <rect width="800" height="400" fill="#f8fafc" rx="12"/>
+            <ellipse cx="360" cy="200" rx="160" ry="140" fill="#e2e8f0" stroke="#475569" stroke-width="2"/>
+            <line x1="360" y1="30" x2="360" y2="370" stroke="#dc2626" stroke-width="2"/>
+            <text x="370" y="50" font-size="13" fill="#dc2626" font-weight="bold">北極 (線速度 = 0 m/s)</text>
+            <line x1="360" y1="200" x2="520" y2="200" stroke="#0284c7" stroke-width="3"/>
+            <line x1="520" y1="200" x2="680" y2="200" stroke="#16a34a" stroke-width="4"/>
+            <polygon points="680,193 695,200 680,207" fill="#16a34a"/>
+            <text x="540" y="190" font-size="14" fill="#15803d" font-weight="bold">赤道最大線速度 V = 465 m/s</text>
+            <line x1="360" y1="110" x2="480" y2="110" stroke="#0284c7" stroke-width="2" stroke-dasharray="3,3"/>
+            <line x1="480" y1="110" x2="590" y2="110" stroke="#ea580c" stroke-width="3"/>
+            <polygon points="590,105 600,110 590,115" fill="#ea580c"/>
+            <text x="490" y="100" font-size="13" fill="#c2410c" font-weight="bold">中緯度 (40°N) V = 355 m/s</text>
+            <rect x="540" y="270" width="230" height="90" rx="8" fill="#ffffff" stroke="#16a34a" stroke-width="1.5"/>
+            <text x="550" y="295" font-size="13" fill="#15803d" font-weight="bold">為什麼發射火箭向東射？</text>
+            <text x="550" y="320" font-size="12" fill="#334155">順著地球自轉方向發射，</text>
+            <text x="550" y="340" font-size="12" fill="#334155">免費獲取 465 m/s 初始速度！</text>
+          </svg>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span class="source-tag">文獻依據：<b>wiki/topic_01</b> (raw/05.md.md p.8-9)</span>
+        <div class="keyboard-hint">切換：<span class="key-cap">←</span> <span class="key-cap">→</span></div>
+      </div>
+    </div>
+
+    <!-- ==================== SLIDE 04 ==================== -->
+    <div class="slide" data-slide="4" data-unit="第一單元：地球真實面貌" data-source="wiki/topic_01_地球形狀與幾何物理特徵.md">
+      <div class="slide-header">
+        <div class="header-left">
+          <span class="unit-badge">第一單元：地球真實面貌</span>
+          <h2 class="slide-title">04. 大氣層的電磁迷霧——電離層色散與雙頻 GPS</h2>
+        </div>
+        <div class="slide-counter"><span>04</span> / 29</div>
+      </div>
+      <div class="slide-body">
+        <div class="narrative-col">
+          <div class="analogy-card">
+            <div class="analogy-title">💡 零基礎白話比喻</div>
+            <div class="analogy-text">衛星訊號穿越高空 300 公里帶電粒子層時，會被減慢速度（色散）。測量員派兩名不同頻率的「偵察兵」（L1/L2）一起走，比對抵達時間差，就能精確扣除大氣干擾！</div>
+          </div>
+          <div class="key-points-card">
+            <h4>📌 大氣垂直分層與延遲消除</h4>
+            <ul>
+              <li><b>大氣五層</b>：對流層（氣溫隨高度降 6.5℃/km）、平流層、中層、熱層（電離層）、散逸層。</li>
+              <li><b>電離層色散</b>：電子密度在 300~400 km 達最大，延遲與電磁波頻率平方成反比。</li>
+              <li><b>雙頻消除法</b>：利用 GPS L1（1.575 GHz）與 L2（1.227 GHz）可消除 99% 以上電離層一階延遲。</li>
+            </ul>
+          </div>
+          <div class="formula-badge">雙頻組合：TEC（總電子含量）差分消除電離層一階延遲</div>
+        </div>
+        <div class="visual-col">
+          <svg viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+            <rect width="800" height="400" fill="#f8fafc" rx="12"/>
+            <rect x="80" y="40" width="300" height="60" fill="#fed7aa" opacity="0.6"/>
+            <text x="90" y="75" font-size="13" fill="#9a3412" font-weight="bold">電離層 (80 - 800 km)</text>
+            <rect x="80" y="100" width="300" height="40" fill="#e2e8f0"/>
+            <text x="90" y="125" font-size="12" fill="#475569">中層 (50 - 80 km)</text>
+            <rect x="80" y="140" width="300" height="40" fill="#bae6fd" opacity="0.6"/>
+            <text x="90" y="165" font-size="12" fill="#0369a1">平流層 (臭氧層 10 - 50 km)</text>
+            <rect x="80" y="180" width="300" height="50" fill="#bbf7d0" opacity="0.7"/>
+            <text x="90" y="210" font-size="13" fill="#15803d" font-weight="bold">對流層 (天氣現象 0 - 10 km)</text>
+            <line x1="60" y1="230" x2="400" y2="230" stroke="#334155" stroke-width="3"/>
+            <text x="180" y="255" font-size="13" fill="#334155" font-weight="bold">地球表面</text>
+            <circle cx="580" cy="50" r="14" fill="#0284c7"/>
+            <text x="610" y="55" font-size="14" fill="#0369a1" font-weight="bold">GPS 衛星</text>
+            <path d="M 580,65 Q 560,140 540,230" fill="none" stroke="#2563eb" stroke-width="2.5"/>
+            <text x="460" y="140" font-size="12" fill="#1d4ed8" font-weight="bold">L1: 1.575 GHz</text>
+            <path d="M 580,65 Q 620,140 600,230" fill="none" stroke="#7c3aed" stroke-width="2.5" stroke-dasharray="4,4"/>
+            <text x="610" y="140" font-size="12" fill="#6d28d9" font-weight="bold">L2: 1.227 GHz</text>
+            <rect x="520" y="230" width="100" height="40" rx="6" fill="#334155"/>
+            <text x="535" y="255" font-size="12" fill="#ffffff" font-weight="bold">雙頻接收機</text>
+            <rect x="440" y="300" width="320" height="70" rx="8" fill="#ffffff" stroke="#2563eb" stroke-width="1.5"/>
+            <text x="450" y="325" font-size="13" fill="#1e40af" font-weight="bold">色散差分消除一階延遲</text>
+            <text x="450" y="348" font-size="12" fill="#475569">利用兩頻率延遲差值，直接計算出大氣延遲量</text>
+          </svg>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span class="source-tag">文獻依據：<b>wiki/topic_01</b> (raw/05.md.md p.5-7)</span>
+        <div class="keyboard-hint">切換：<span class="key-cap">←</span> <span class="key-cap">→</span></div>
+      </div>
+    </div>
+
+    <!-- ==================== SLIDE 05 ==================== -->
+    <div class="slide" data-slide="5" data-unit="第二單元：地球重力場" data-source="wiki/topic_02_地球重力場與重力位理論.md">
+      <div class="slide-header">
+        <div class="header-left">
+          <span class="unit-badge">第二單元：地球重力場</span>
+          <h2 class="slide-title">05. 什麼是重力？萬有引力與離心力的合力</h2>
+        </div>
+        <div class="slide-counter"><span>05</span> / 29</div>
+      </div>
+      <div class="slide-body">
+        <div class="narrative-col">
+          <div class="analogy-card">
+            <div class="analogy-title">💡 零基礎白話比喻</div>
+            <div class="analogy-text">你站在磅秤上的體重，不只是地球在吸你！因為地球一直轉，離心力會悄悄把你往外甩。你在赤道被甩得最凶，所以去赤道量體重會稍微變輕！</div>
+          </div>
+          <div class="key-points-card">
+            <h4>📌 重力向量物理本質</h4>
+            <ul>
+              <li><b>向量合成</b>：重力 g = 萬有引力 F + 自轉離心力 P。</li>
+              <li><b>赤道重力小（約 978 Gal）</b>，<b>兩極重力大（約 983 Gal）</b>。</li>
+              <li><b>緯度遞增雙主因</b>：①極曲率效應（兩極距地心近，引力大）；②離心力效應（赤道離心力 3.4 Gal 削弱引力，兩極離心力為 0）。</li>
+            </ul>
+          </div>
+          <div class="formula-badge">重力合成：g = F + P （鉛垂線即為合力 g 方向，並非指向地心）</div>
+        </div>
+        <div class="visual-col">
+          <svg viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+            <rect width="800" height="400" fill="#f8fafc" rx="12"/>
+            <circle cx="360" cy="180" r="7" fill="#0f172a"/>
+            <text x="340" y="170" font-size="16" fill="#0f172a" font-weight="bold">測點 P</text>
+            <line x1="360" y1="180" x2="240" y2="300" stroke="#2563eb" stroke-width="3.5"/>
+            <polygon points="240,300 248,288 256,296" fill="#2563eb"/>
+            <text x="210" y="270" font-size="14" fill="#1d4ed8" font-weight="bold">萬有引力 F (向地心)</text>
+            <line x1="360" y1="180" x2="480" y2="180" stroke="#ea580c" stroke-width="3"/>
+            <polygon points="480,180 470,174 470,186" fill="#ea580c"/>
+            <text x="490" y="185" font-size="14" fill="#c2410c" font-weight="bold">自轉離心力 P (背離地軸)</text>
+            <line x1="360" y1="180" x2="330" y2="330" stroke="#16a34a" stroke-width="4"/>
+            <polygon points="330,330 334,316 345,322" fill="#16a34a"/>
+            <text x="340" y="325" font-size="16" fill="#15803d" font-weight="bold">地球重力 g = F + P</text>
+            <rect x="520" y="50" width="250" height="95" rx="8" fill="#ffffff" stroke="#16a34a" stroke-width="1.5"/>
+            <text x="535" y="75" font-size="14" fill="#15803d" font-weight="bold">鉛垂線的本質</text>
+            <text x="535" y="100" font-size="12" fill="#334155">重物懸掛靜止時的方向，</text>
+            <text x="535" y="120" font-size="12" fill="#334155">指向合力 g 方向，並非精確指向地心！</text>
+          </svg>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span class="source-tag">文獻依據：<b>wiki/topic_02</b> (raw/05.md.md p.19-22)</span>
+        <div class="keyboard-hint">切換：<span class="key-cap">←</span> <span class="key-cap">→</span></div>
+      </div>
+    </div>
+
+    <!-- ==================== SLIDE 06 ==================== -->
+    <div class="slide" data-slide="6" data-unit="第二單元：地球重力場" data-source="wiki/topic_02_地球重力場與重力位理論.md">
+      <div class="slide-header">
+        <div class="header-left">
+          <span class="unit-badge">第二單元：地球重力場</span>
+          <h2 class="slide-title">06. 什麼是「高度」？大地水準面與不平行的水準面</h2>
+        </div>
+        <div class="slide-counter"><span>06</span> / 29</div>
+      </div>
+      <div class="slide-body">
+        <div class="narrative-col">
+          <div class="analogy-card">
+            <div class="analogy-title">💡 零基礎白話比喻</div>
+            <div class="analogy-text">水往低處流是因為重力位能差。因為地球內部各處密度不均，地球的等位水準面像一層層歪扭的洋蔥皮——<b>它們永遠不會相交，但也絕對不平行！</b></div>
+          </div>
+          <div class="key-points-card">
+            <h4>📌 等位面幾何物理法則</h4>
+            <ul>
+              <li><b>大地水準面 (Geoid)</b>：靜止平均海水面穿過大陸形成的閉合重力等位面（海拔 0 公尺起算面）。</li>
+              <li><b>等位面間距公式</b>：dl = - dW / g。</li>
+              <li><b>推論</b>：位能差 dW 一定時，重力 g 越大的地方間距 dl 越窄、g 小處間距寬，故水準面彼此不平行且永不相交！</li>
+            </ul>
+          </div>
+          <div class="formula-badge">間距微分式：dl = - dW / g （鉛垂線處處正交於水準面）</div>
+        </div>
+        <div class="visual-col">
+          <svg viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+            <rect width="800" height="400" fill="#f8fafc" rx="12"/>
+            <path d="M 80,180 Q 250,150 450,190 T 720,160" fill="none" stroke="#0284c7" stroke-width="3.5"/>
+            <text x="730" y="165" font-size="14" fill="#0369a1" font-weight="bold">大地水準面 W1 (海平面)</text>
+            <path d="M 80,90 Q 250,70 450,120 T 720,70" fill="none" stroke="#0ea5e9" stroke-width="2.5" stroke-dasharray="6,4"/>
+            <text x="730" y="75" font-size="14" fill="#0284c7" font-weight="bold">重力等位面 W2 (高處)</text>
+            <line x1="220" y1="78" x2="220" y2="155" stroke="#dc2626" stroke-width="2"/>
+            <text x="140" y="120" font-size="12" fill="#b91c1c" font-weight="bold">g 較大 → 間距窄</text>
+            <line x1="500" y1="115" x2="500" y2="185" stroke="#16a34a" stroke-width="2"/>
+            <text x="510" y="150" font-size="12" fill="#15803d" font-weight="bold">g 較小 → 間距寬</text>
+            <rect x="250" y="270" width="300" height="75" rx="8" fill="#ffffff" stroke="#0284c7" stroke-width="1.5"/>
+            <text x="270" y="300" font-size="15" fill="#0369a1" font-weight="bold">核心公式：dl = - dW / g</text>
+            <text x="270" y="325" font-size="12" fill="#475569">水準面彼此既不平行，也絕對不相交！</text>
+          </svg>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span class="source-tag">文獻依據：<b>wiki/topic_02</b> (raw/05.md.md p.43-50)</span>
+        <div class="keyboard-hint">切換：<span class="key-cap">←</span> <span class="key-cap">→</span></div>
+      </div>
+    </div>
+
+    <!-- ==================== SLIDE 07 ==================== -->
+    <div class="slide" data-slide="7" data-unit="第二單元：地球重力場" data-source="wiki/topic_03_正常重力位與水準橢球.md">
+      <div class="slide-header">
+        <div class="header-left">
+          <span class="unit-badge">第二單元：地球重力場</span>
+          <h2 class="slide-title">07. 理想與現實的折衷——正常重力位與擾動位 T</h2>
+        </div>
+        <div class="slide-counter"><span>07</span> / 29</div>
+      </div>
+      <div class="slide-body">
+        <div class="narrative-col">
+          <div class="analogy-card">
+            <div class="analogy-title">💡 零基礎白話比喻</div>
+            <div class="analogy-text">地球內部質量像發泡馬鈴薯，重力公式算不出來。測量學家先捏一個光滑好算的「標準橢球重力場」（吸走 99.9% 效應），剩下的細微凹凸叫「擾動位 T」，問題迎刃而解！</div>
+          </div>
+          <div class="key-points-card">
+            <h4>📌 正常重力場分解法</h4>
+            <ul>
+              <li><b>位能分解式</b>：真實重力位 W = 正常重力位 U + 擾動位 T。</li>
+              <li><b>正常重力位三大假設</b>：①原點置於地心（v₁ = 0）；②軸向對齊主慣性軸；③東西方向旋轉對稱（消除經度項）。</li>
+              <li><b>核心意義</b>：物理大地測量學本質被簡化為「求解極微小的擾動位 T」。</li>
+            </ul>
+          </div>
+          <div class="formula-badge">分解模型：W = U + T （正常橢球吸收 99.9% 質量與形狀）</div>
+        </div>
+        <div class="visual-col">
+          <svg viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+            <rect width="800" height="400" fill="#f8fafc" rx="12"/>
+            <ellipse cx="400" cy="200" rx="200" ry="120" fill="none" stroke="#2563eb" stroke-width="3"/>
+            <text x="610" y="190" font-size="14" fill="#1d4ed8" font-weight="bold">正常水準橢球 U (99.9%)</text>
+            <path d="M 200,200 Q 250,60 400,75 Q 520,90 600,200 Q 550,330 400,320 Q 260,310 200,200 Z" fill="none" stroke="#d97706" stroke-width="3" stroke-dasharray="6,4"/>
+            <text x="400" y="55" text-anchor="middle" font-size="14" fill="#b45309" font-weight="bold">真實大地水準面 W</text>
+            <line x1="400" y1="75" x2="400" y2="80" stroke="#dc2626" stroke-width="3"/>
+            <text x="415" y="105" font-size="13" fill="#dc2626" font-weight="bold">起伏落差 N (擾動位 T 產生)</text>
+            <rect x="250" y="340" width="300" height="45" rx="6" fill="#ffffff" stroke="#475569" stroke-width="1"/>
+            <text x="400" y="368" text-anchor="middle" font-size="15" fill="#0f172a" font-weight="bold">W = U + T （研究轉化為求解 T）</text>
+          </svg>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span class="source-tag">文獻依據：<b>wiki/topic_03</b> (raw/05.md.md p.50, 115-123)</span>
+        <div class="keyboard-hint">切換：<span class="key-cap">←</span> <span class="key-cap">→</span></div>
+      </div>
+    </div>
+
+    <!-- ==================== SLIDE 08 ==================== -->
+    <div class="slide" data-slide="8" data-unit="第二單元：地球重力場" data-source="wiki/topic_03_正常重力位與水準橢球.md">
+      <div class="slide-header">
+        <div class="header-left">
+          <span class="unit-badge">第二單元：地球重力場</span>
+          <h2 class="slide-title">08. 不鑽地心也能算扁率——克萊羅定理與索米里安納公式</h2>
+        </div>
+        <div class="slide-counter"><span>08</span> / 29</div>
+      </div>
+      <div class="slide-body">
+        <div class="narrative-col">
+          <div class="analogy-card">
+            <div class="analogy-title">💡 零基礎白話比喻</div>
+            <div class="analogy-text">你不用挖穿地球量極半徑有多短。克萊羅定理搭建了一座神奇橋樑：只要在地表量重力加速度的南北變化幅度，配上自轉速度，就能精準倒推地球幾何扁率！</div>
+          </div>
+          <div class="key-points-card">
+            <h4>📌 幾何與物理重力的橋樑</h4>
+            <ul>
+              <li><b>克萊羅定理 (Clairaut)</b>：α + β = (5/2) q。</li>
+              <li><b>符號定義</b>：α 為幾何扁率 (a-b)/a；β 為重力扁率 (γ_p - γ_e)/γ_e；q 為離心力比值 (ω²a/g_e ≈ 1/289)。</li>
+              <li><b>索米里安納公式</b>：WGS-84 採用的嚴密無截斷誤差閉合解，廣泛植入 GPS 晶片演算。</li>
+            </ul>
+          </div>
+          <div class="formula-badge">克萊羅定理：α + β = (5/2) q （地表測量重力差值反求地球扁率）</div>
+        </div>
+        <div class="visual-col">
+          <svg viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+            <rect width="800" height="400" fill="#f8fafc" rx="12"/>
+            <line x1="200" y1="160" x2="600" y2="160" stroke="#334155" stroke-width="4"/>
+            <polygon points="400,160 380,210 420,210" fill="#64748b"/>
+            <circle cx="200" cy="120" r="35" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+            <text x="200" y="115" text-anchor="middle" font-size="13" fill="#1e40af" font-weight="bold">幾何扁率</text>
+            <text x="200" y="135" text-anchor="middle" font-size="16" fill="#1e40af" font-weight="bold">α = (a-b)/a</text>
+            <circle cx="600" cy="120" r="35" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+            <text x="600" y="115" text-anchor="middle" font-size="13" fill="#166534" font-weight="bold">重力扁率</text>
+            <text x="600" y="135" text-anchor="middle" font-size="16" fill="#166534" font-weight="bold">β = Δγ/γe</text>
+            <rect x="230" y="235" width="340" height="80" rx="8" fill="#ffffff" stroke="#dc2626" stroke-width="2"/>
+            <text x="400" y="265" text-anchor="middle" font-size="17" fill="#b91c1c" font-weight="bold">α + β = (5/2) q</text>
+            <text x="400" y="292" text-anchor="middle" font-size="13" fill="#475569">地表量重力差值 → 反求地球幾何扁平度！</text>
+          </svg>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span class="source-tag">文獻依據：<b>wiki/topic_03</b> (raw/05.md.md p.89-106)</span>
+        <div class="keyboard-hint">切換：<span class="key-cap">←</span> <span class="key-cap">→</span></div>
+      </div>
+    </div>
+
+    <!-- ==================== SLIDE 09 ==================== -->
+    <div class="slide" data-slide="9" data-unit="第二單元：地球重力場" data-source="wiki/topic_03_正常重力位與水準橢球.md">
+      <div class="slide-header">
+        <div class="header-left">
+          <span class="unit-badge">第二單元：地球重力場</span>
+          <h2 class="slide-title">09. 爬山量重力會變輕？自由空間高程修正</h2>
+        </div>
+        <div class="slide-counter"><span>09</span> / 29</div>
+      </div>
+      <div class="slide-body">
+        <div class="narrative-col">
+          <div class="analogy-card">
+            <div class="analogy-title">💡 零基礎白話比喻</div>
+            <div class="analogy-text">引力跟距離平方成反比。從海平面爬到玉山山頂，離地心遠了，地心引力變小。這個因為「站得高」引起的自然遞減，稱為自由空間高程修正。</div>
+          </div>
+          <div class="key-points-card">
+            <h4>📌 自由空間高程修正黃金法則</h4>
+            <ul>
+              <li><b>物理本質</b>：純幾何高度提升造成的萬有引力衰減。</li>
+              <li><b>公式展開</b>：Δ₁g ≈ (2γ₀/R) · h ≈ 0.3086 h (mGal)。</li>
+              <li><b>口算秘訣</b>：<b>地面每爬升 3 公尺，正常重力值約減少 1 mGal</b>（0.001 Gal）。</li>
+            </ul>
+          </div>
+          <div class="formula-badge">高程修正：γ = (γ₀ - 0.3086 h) × 10⁻³ Gal （h 以公尺為單位）</div>
+        </div>
+        <div class="visual-col">
+          <svg viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+            <rect width="800" height="400" fill="#f8fafc" rx="12"/>
+            <path d="M 100,320 L 300,320 L 480,120 L 560,180 L 700,320 Z" fill="#e2e8f0" stroke="#475569" stroke-width="2.5"/>
+            <line x1="80" y1="320" x2="720" y2="320" stroke="#0284c7" stroke-width="3"/>
+            <text x="120" y="345" font-size="14" fill="#0369a1" font-weight="bold">海平面 (h = 0, γ = γ₀)</text>
+            <circle cx="480" cy="120" r="6" fill="#dc2626"/>
+            <text x="500" y="115" font-size="14" fill="#dc2626" font-weight="bold">山頂高程 h</text>
+            <line x1="480" y1="120" x2="480" y2="320" stroke="#dc2626" stroke-width="2" stroke-dasharray="4,4"/>
+            <text x="490" y="220" font-size="14" fill="#dc2626" font-weight="bold">高差 h</text>
+            <rect x="140" y="70" width="260" height="90" rx="8" fill="#ffffff" stroke="#0284c7" stroke-width="1.5"/>
+            <text x="155" y="95" font-size="14" fill="#0369a1" font-weight="bold">自由空間修正法則</text>
+            <text x="155" y="122" font-size="13" fill="#b91c1c" font-weight="bold">每上升 3 公尺，減少 1 mGal</text>
+            <text x="155" y="145" font-size="12" fill="#475569">Δg = 0.3086 × h (mGal)</text>
+          </svg>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span class="source-tag">文獻依據：<b>wiki/topic_03</b> (raw/05.md.md p.107)</span>
+        <div class="keyboard-hint">切換：<span class="key-cap">←</span> <span class="key-cap">→</span></div>
+      </div>
+    </div>
+
+    <!-- ==================== SLIDE 10 ==================== -->
+    <div class="slide" data-slide="10" data-unit="第三單元：地球運動與時間" data-source="wiki/topic_04_地球運動與空間坐標系.md">
+      <div class="slide-header">
+        <div class="header-left">
+          <span class="unit-badge">第三單元：地球運動與時間</span>
+          <h2 class="slide-title">10. 晃動的陀螺——歲差、章動與極移</h2>
+        </div>
+        <div class="slide-counter"><span>10</span> / 29</div>
+      </div>
+      <div class="slide-body">
+        <div class="narrative-col">
+          <div class="analogy-card">
+            <div class="analogy-title">💡 零基礎白話比喻</div>
+            <div class="analogy-text">旋轉陀螺轉慢時，軸心在空中劃出圓錐（歲差，26,000年）；旁邊有人輕敲，軸心發抖（章動，18.6年）。而「極移」是地軸不動，地殼像晃動的蛋黃，在一個足球場大（20m）範圍內畫圈！</div>
+          </div>
+          <div class="key-points-card">
+            <h4>📌 歲差章動 vs 極移本質對比</h4>
+            <ul>
+              <li><b>歲差 (Precession)</b>：地軸繞黃極旋轉，週期約 25,800 年，春分點西移 50.3″/年。</li>
+              <li><b>章動 (Nutation)</b>：白道傾角引發短週期擺動，週期 18.6 年，振幅 9.21″。</li>
+              <li><b>極移 (Polar Motion)</b>：地軸相對地殼晃動，張德勒擺動（435 天）加上周年項，晃動約 20 公尺。</li>
+            </ul>
+          </div>
+          <div class="formula-badge">空間指向改變（歲差章動） vs 地殼本體晃動（極移 20m 足球場）</div>
+        </div>
+        <div class="visual-col">
+          <svg viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+            <rect width="800" height="400" fill="#f8fafc" rx="12"/>
+            <polygon points="400,260 280,60 520,60" fill="#fed7aa" opacity="0.4"/>
+            <ellipse cx="400" cy="60" rx="120" ry="25" fill="none" stroke="#ea580c" stroke-width="2.5" stroke-dasharray="4,4"/>
+            <line x1="400" y1="260" x2="400" y2="25" stroke="#334155" stroke-width="2"/>
+            <polygon points="400,20 395,30 405,30" fill="#334155"/>
+            <text x="415" y="30" font-size="13" fill="#334155" font-weight="bold">黃北極 (垂直黃道)</text>
+            <line x1="400" y1="260" x2="510" y2="65" stroke="#dc2626" stroke-width="3"/>
+            <polygon points="510,65 500,72 505,80" fill="#dc2626"/>
+            <text x="520" y="65" font-size="13" fill="#dc2626" font-weight="bold">自轉軸 (地軸)</text>
+            <path d="M 500,55 Q 510,65 520,58 T 530,70" fill="none" stroke="#7c3aed" stroke-width="3"/>
+            <text x="535" y="85" font-size="12" fill="#6d28d9" font-weight="bold">章動抖動 (18.6年)</text>
+            <path d="M 460,40 A 120,25 0 0,1 515,65" fill="none" stroke="#ea580c" stroke-width="3"/>
+            <polygon points="515,65 505,58 518,52" fill="#ea580c"/>
+            <text x="430" y="20" font-size="13" fill="#c2410c" font-weight="bold">歲差進動 (26,000年)</text>
+            <rect x="60" y="80" width="200" height="110" rx="8" fill="#ffffff" stroke="#2563eb" stroke-width="1.5"/>
+            <text x="75" y="105" font-size="13" fill="#1d4ed8" font-weight="bold">極移 (Polar Motion)</text>
+            <text x="75" y="128" font-size="12" fill="#334155">地軸相對地表滑移</text>
+            <text x="75" y="148" font-size="12" fill="#334155">張德勒擺動 (435天)</text>
+            <text x="75" y="168" font-size="12" fill="#dc2626" font-weight="bold">晃動範圍約 20 公尺！</text>
+          </svg>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span class="source-tag">文獻依據：<b>wiki/topic_04</b> (raw/02.pdf.pdf 名詞解釋 2,3,6)</span>
+        <div class="keyboard-hint">切換：<span class="key-cap">←</span> <span class="key-cap">→</span></div>
+      </div>
+    </div>
+
+    <!-- ==================== SLIDE 11 ==================== -->
+    <div class="slide" data-slide="11" data-unit="第三單元：地球運動與時間" data-source="wiki/topic_04_地球運動與空間坐標系.md">
+      <div class="slide-header">
+        <div class="header-left">
+          <span class="unit-badge">第三單元：地球運動與時間</span>
+          <h2 class="slide-title">11. 空間坐標階梯——從宇宙天球 (CIS) 到腳底測站 (CTS)</h2>
+        </div>
+        <div class="slide-counter"><span>11</span> / 29</div>
+      </div>
+      <div class="slide-body">
+        <div class="narrative-col">
+          <div class="analogy-card">
+            <div class="analogy-title">💡 零基礎白話比喻</div>
+            <div class="analogy-text">為什麼叫「協議（Conventional）」？因為地球天天在晃，宇宙中沒有大自然刻好的坐標軸，所以是各國頂尖科學家開會投票「約定（協議）」出一套全球公認標準軸！</div>
+          </div>
+          <div class="key-points-card">
+            <h4>📌 空間坐標階梯轉換鏈</h4>
+            <ul>
+              <li><b>協議天球 (CIS / J2000.0)</b>：以遙遠背景星系為準的慣性系，用於計算 GPS 衛星軌道。</li>
+              <li><b>協議地球 (CTS / ECEF)</b>：隨地球一起轉動（地固系），CIO 平極為 Z 軸，WGS84 屬此類。</li>
+              <li><b>EOP 轉換樞紐</b>：由 IERS 觀測發布歲差、章動、自轉角 UT1 與極移，連接天與地。</li>
+            </ul>
+          </div>
+          <div class="formula-badge">轉換階梯：CIS（衛星天球） ➔ [EOP 參數旋轉] ➔ CTS（地表測站）</div>
+        </div>
+        <div class="visual-col">
+          <svg viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+            <rect width="800" height="400" fill="#f8fafc" rx="12"/>
+            <rect x="60" y="60" width="180" height="60" rx="8" fill="#e0e7ff" stroke="#4338ca" stroke-width="2"/>
+            <text x="150" y="85" text-anchor="middle" font-size="13" fill="#3730a3" font-weight="bold">瞬時天球坐標系</text>
+            <text x="150" y="105" text-anchor="middle" font-size="11" fill="#4338ca">真北天極 / 真春分點</text>
+            <line x1="240" y1="90" x2="310" y2="90" stroke="#6366f1" stroke-width="3"/>
+            <polygon points="310,90 300,84 300,96" fill="#6366f1"/>
+            <text x="275" y="80" text-anchor="middle" font-size="11" fill="#4f46e5">歲差章動</text>
+            <rect x="310" y="60" width="180" height="60" rx="8" fill="#e0e7ff" stroke="#4338ca" stroke-width="2"/>
+            <text x="400" y="85" text-anchor="middle" font-size="13" fill="#3730a3" font-weight="bold">協議天球 (CIS)</text>
+            <text x="400" y="105" text-anchor="middle" font-size="11" fill="#4338ca">J2000.0 / 衛星軌道</text>
+            <line x1="490" y1="90" x2="560" y2="90" stroke="#6366f1" stroke-width="3"/>
+            <polygon points="560,90 550,84 550,96" fill="#6366f1"/>
+            <text x="525" y="80" text-anchor="middle" font-size="11" fill="#4f46e5">自轉角 UT1</text>
+            <rect x="560" y="60" width="180" height="60" rx="8" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+            <text x="650" y="85" text-anchor="middle" font-size="13" fill="#14532d" font-weight="bold">協議地球 (CTS/ECEF)</text>
+            <text x="650" y="105" text-anchor="middle" font-size="11" fill="#15803d">CIO平極 / WGS84地固</text>
+            <line x1="650" y1="120" x2="650" y2="200" stroke="#16a34a" stroke-width="3"/>
+            <polygon points="650,200 644,190 656,190" fill="#16a34a"/>
+            <text x="695" y="160" text-anchor="middle" font-size="12" fill="#15803d">極移改正 (x, y)</text>
+            <rect x="560" y="200" width="180" height="60" rx="8" fill="#fef3c7" stroke="#b45309" stroke-width="2"/>
+            <text x="650" y="225" text-anchor="middle" font-size="13" fill="#78350f" font-weight="bold">測站地平 (站心)</text>
+            <text x="650" y="245" text-anchor="middle" font-size="11" fill="#b45309">東北天 (n, e, u)</text>
+          </svg>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span class="source-tag">文獻依據：<b>wiki/topic_04</b> (raw/01.pdf.pdf 申論比較 5)</span>
+        <div class="keyboard-hint">切換：<span class="key-cap">←</span> <span class="key-cap">→</span></div>
+      </div>
+    </div>
+
+    <!-- ==================== SLIDE 12 ==================== -->
+    <div class="slide" data-slide="12" data-unit="第三單元：地球運動與時間" data-source="wiki/topic_04_地球運動與空間坐標系.md">
+      <div class="slide-header">
+        <div class="header-left">
+          <span class="unit-badge">第三單元：地球運動與時間</span>
+          <h2 class="slide-title">12. 鉛垂線與法線的叉路——垂線偏差與拉普拉斯方程</h2>
+        </div>
+        <div class="slide-counter"><span>12</span> / 29</div>
+      </div>
+      <div class="slide-body">
+        <div class="narrative-col">
+          <div class="analogy-card">
+            <div class="analogy-title">💡 零基礎白話比喻</div>
+            <div class="analogy-text">拿一條繩子掛鉛錘，指出的「重力鉛垂線」被山脈引力拉偏；而數學橢球的「垂直法線」是純幾何線。這兩條線在空中交叉產生的微小夾角，就叫「垂線偏差」！</div>
+          </div>
+          <div class="key-points-card">
+            <h4>📌 垂線偏差與方位角轉換</h4>
+            <ul>
+              <li><b>垂線偏差 (ξ, η)</b>：ξ 為子午圈分量，η 為卯酉圈分量。</li>
+              <li><b>坐標差</b>：φ_G = Φ_A - ξ ； λ_G = Λ_A - η · secφ。</li>
+              <li><b>拉普拉斯方程式</b>：α_G = α_A - η · tanφ （連結天文方位角與大地方位角）。</li>
+            </ul>
+          </div>
+          <div class="formula-badge">拉普拉斯方位角：α_G = α_A - η · tanφ （大地原點設 ξ = η = 0 定向）</div>
+        </div>
+        <div class="visual-col">
+          <svg viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+            <rect width="800" height="400" fill="#f8fafc" rx="12"/>
+            <circle cx="400" cy="180" r="7" fill="#0f172a"/>
+            <text x="400" y="160" text-anchor="middle" font-size="16" fill="#0f172a" font-weight="bold">測站 P</text>
+            <line x1="400" y1="180" x2="330" y2="340" stroke="#16a34a" stroke-width="3.5"/>
+            <text x="250" y="335" font-size="14" fill="#15803d" font-weight="bold">橢球法線 (幾何基準)</text>
+            <line x1="400" y1="180" x2="470" y2="340" stroke="#dc2626" stroke-width="3.5"/>
+            <text x="480" y="335" font-size="14" fill="#b91c1c" font-weight="bold">鉛垂線 (重力基準)</text>
+            <path d="M 370,240 A 60,60 0 0,0 430,240" fill="none" stroke="#2563eb" stroke-width="2.5"/>
+            <rect x="330" y="250" width="140" height="30" rx="4" fill="#ffffff" stroke="#2563eb" stroke-width="1.2"/>
+            <text x="400" y="270" text-anchor="middle" font-size="13" fill="#1d4ed8" font-weight="bold">垂線偏差 θ (ξ, η)</text>
+            <rect x="520" y="50" width="250" height="85" rx="8" fill="#ffffff" stroke="#2563eb" stroke-width="1.5"/>
+            <text x="535" y="75" font-size="14" fill="#1e40af" font-weight="bold">拉普拉斯方位角方程式</text>
+            <text x="535" y="100" font-size="13" fill="#334155">α_G = α_A - η · tan(φ)</text>
+            <text x="535" y="120" font-size="12" fill="#64748b">用以檢核與定向測量方位</text>
+          </svg>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span class="source-tag">文獻依據：<b>wiki/topic_04</b> (raw/01.pdf.pdf 公式意義二、計算 13)</span>
+        <div class="keyboard-hint">切換：<span class="key-cap">←</span> <span class="key-cap">→</span></div>
+      </div>
+    </div>
+
+    <!-- ==================== SLIDE 13 ==================== -->
+    <div class="slide" data-slide="13" data-unit="第三單元：地球運動與時間" data-source="wiki/topic_04_地球運動與空間坐標系.md">
+      <div class="slide-header">
+        <div class="header-left">
+          <span class="unit-badge">第三單元：地球運動與時間</span>
+          <h2 class="slide-title">13. 格林威治的 102 米之謎——為什麼銅線上 GPS 讀不出 0 度？</h2>
+        </div>
+        <div class="slide-counter"><span>13</span> / 29</div>
+      </div>
+      <div class="slide-body">
+        <div class="narrative-col">
+          <div class="analogy-card">
+            <div class="analogy-title">💡 零基礎白話比喻</div>
+            <div class="analogy-text">你去英國格林威治跨在歷史銅線上拍照，手機 GPS 卻顯示「西經 0.0015°」而不是 0 度！這不是手機壞了，而是因為當地垂線偏差，讓現代地心衛星零度經線往東移了 102 米！</div>
+          </div>
+          <div class="key-points-card">
+            <h4>📌 歷史重力基準 vs 現代地心幾何基準</h4>
+            <ul>
+              <li><b>1884 年歷史基準</b>：以艾里中星儀的鉛垂線為經度 0（局部重力天文坐標）。</li>
+              <li><b>現代 IRM 基準</b>：以全球質心為原點、以地心空間幾何法線為基準（WGS84）。</li>
+              <li><b>102 公尺成因</b>：當地質量不均造成約 <b>5.6″ 垂線偏差</b>，換算地面弧長恰好約 102 米。</li>
+            </ul>
+          </div>
+          <div class="formula-badge">經度偏差：西經 0.0015° ≈ 102 公尺（R · Δλ · cosφ = 104 m ≈ 102 m）</div>
+        </div>
+        <div class="visual-col">
+          <svg viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+            <rect width="800" height="400" fill="#f8fafc" rx="12"/>
+            <line x1="100" y1="260" x2="700" y2="260" stroke="#334155" stroke-width="4"/>
+            <line x1="300" y1="80" x2="300" y2="260" stroke="#d97706" stroke-width="4"/>
+            <rect x="292" y="250" width="16" height="20" fill="#d97706"/>
+            <text x="300" y="60" text-anchor="middle" font-size="14" fill="#b45309" font-weight="bold">歷史銅線 (艾里中星儀)</text>
+            <text x="300" y="295" text-anchor="middle" font-size="12" fill="#b45309">天文經度 0° (重力鉛垂)</text>
+            <line x1="520" y1="80" x2="520" y2="260" stroke="#0284c7" stroke-width="4"/>
+            <circle cx="520" cy="260" r="7" fill="#0284c7"/>
+            <text x="520" y="60" text-anchor="middle" font-size="14" fill="#0369a1" font-weight="bold">現代 IRM 子午線 (GPS)</text>
+            <text x="520" y="295" text-anchor="middle" font-size="12" fill="#0369a1">大地經度 0° (地心橢球法線)</text>
+            <line x1="305" y1="180" x2="515" y2="180" stroke="#dc2626" stroke-width="3"/>
+            <polygon points="305,180 317,174 317,186" fill="#dc2626"/>
+            <polygon points="515,180 503,174 503,186" fill="#dc2626"/>
+            <text x="410" y="170" text-anchor="middle" font-size="16" fill="#b91c1c" font-weight="bold">相差約 102 公尺！</text>
+            <text x="410" y="205" text-anchor="middle" font-size="13" fill="#475569">在銅線上手機會讀出西經 0.0015°</text>
+          </svg>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span class="source-tag">文獻依據：<b>wiki/topic_04</b> (raw/01.pdf.pdf 計算 16、raw/03.md.md)</span>
+        <div class="keyboard-hint">切換：<span class="key-cap">←</span> <span class="key-cap">→</span></div>
+      </div>
+    </div>
+
+    <!-- ==================== SLIDE 14 ==================== -->
+    <div class="slide" data-slide="14" data-unit="第三單元：地球運動與時間" data-source="wiki/topic_06_大地測量時間系統.md">
+      <div class="slide-header">
+        <div class="header-left">
+          <span class="unit-badge">第三單元：地球運動與時間</span>
+          <h2 class="slide-title">14. 時間的雙重面貌——恆星時 vs 太陽時</h2>
+        </div>
+        <div class="slide-counter"><span>14</span> / 29</div>
+      </div>
+      <div class="slide-body">
+        <div class="narrative-col">
+          <div class="analogy-card">
+            <div class="analogy-title">💡 零基礎白話比喻</div>
+            <div class="analogy-text">地球自轉 360 度只要 23 小時 56 分。但因為地球同時繞太陽公轉，每天得再多轉 1 度才能讓太陽再次正對頭頂！這多轉的 1 度，剛好就是 <b>4 分鐘</b>！</div>
+          </div>
+          <div class="key-points-card">
+            <h4>📌 天文計時換算本質</h4>
+            <ul>
+              <li><b>恆星日</b>：自轉 360° 所需時間，精確為 <b>23h 56m 04s</b>。</li>
+              <li><b>太陽日</b>：需自轉約 361° 才能重對太陽，長度為 24h。</li>
+              <li><b>天文規律</b>：1 平太陽日 = 1.0027379 恆星日。星星每天提早 4 分鐘升起，一個月提早 2 小時，一年提早 24 小時回到原位。</li>
+            </ul>
+          </div>
+          <div class="formula-badge">時間關係：1 太陽日 (24h) = 1 恆星日 (23h56m04s) + 額外 1° 自轉 (4分鐘)</div>
+        </div>
+        <div class="visual-col">
+          <svg viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+            <rect width="800" height="400" fill="#f8fafc" rx="12"/>
+            <circle cx="400" cy="330" r="30" fill="#f59e0b"/>
+            <text x="400" y="380" text-anchor="middle" font-size="14" fill="#b45309" font-weight="bold">太陽</text>
+            <circle cx="250" cy="150" r="45" fill="#bae6fd" stroke="#0284c7" stroke-width="2.5"/>
+            <line x1="250" y1="150" x2="250" y2="70" stroke="#dc2626" stroke-width="3"/>
+            <text x="250" y="55" text-anchor="middle" font-size="12" fill="#dc2626" font-weight="bold">指向頭頂太陽 (第1天)</text>
+            <circle cx="550" cy="150" r="45" fill="#bae6fd" stroke="#0284c7" stroke-width="2.5"/>
+            <line x1="550" y1="150" x2="550" y2="70" stroke="#16a34a" stroke-width="2.5" stroke-dasharray="4,4"/>
+            <text x="550" y="55" text-anchor="middle" font-size="12" fill="#15803d" font-weight="bold">自轉360° (恆星日已滿 23h56m)</text>
+            <line x1="550" y1="150" x2="440" y2="280" stroke="#dc2626" stroke-width="3"/>
+            <text x="420" y="240" font-size="12" fill="#b91c1c" font-weight="bold">多轉1°才能正對太陽 (多花4分鐘)</text>
+            <text x="400" y="25" text-anchor="middle" font-size="15" fill="#0f172a" font-weight="bold">1 太陽日 (24h) = 1 恆星日 (23h56m04s) + 額外自轉約 1° (4分鐘)</text>
+          </svg>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span class="source-tag">文獻依據：<b>wiki/topic_06</b> (raw/02.pdf.pdf 推導 1,2)</span>
+        <div class="keyboard-hint">切換：<span class="key-cap">←</span> <span class="key-cap">→</span></div>
+      </div>
+    </div>
+
+    <!-- ==================== SLIDE 15 ==================== -->
+    <div class="slide" data-slide="15" data-unit="第三單元：地球運動與時間" data-source="wiki/topic_06_大地測量時間系統.md">
+      <div class="slide-header">
+        <div class="header-left">
+          <span class="unit-badge">第三單元：地球運動與時間</span>
+          <h2 class="slide-title">15. 原子時、協調世界時與閏秒——追趕變慢的地球</h2>
+        </div>
+        <div class="slide-counter"><span>15</span> / 29</div>
+      </div>
+      <div class="slide-body">
+        <div class="narrative-col">
+          <div class="analogy-card">
+            <div class="analogy-title">💡 零基礎白話比喻</div>
+            <div class="analogy-text">銫原子鐘每 140 萬年才差 1 秒；但地球因為潮汐煞車每年變慢約 1 秒。兩者越差越遠怎麼辦？1972 年起人類決定：當原子鐘比地球快接近 1 秒時，在跨年那一分鐘加 1 秒（出現 23:59:60），叫「閏秒」！</div>
+          </div>
+          <div class="key-points-card">
+            <h4>📌 現代時間標準體系</h4>
+            <ul>
+              <li><b>TAI（國際原子時）</b>：銫-133 躍遷 9,192,631,770 週期為 1 秒。</li>
+              <li><b>UTC（協調世界時）</b>：秒長用原子時，時刻追隨地球自轉 UT1（|UT1-UTC| &lt; 0.9s）。</li>
+              <li><b>GPST（GPS時間）</b>：1980/1/6 起算，<b>連續計時絕無閏秒！</b>（TAI = GPST + 19s）。</li>
+              <li><b>光速測距敏感度</b>：1 毫秒（ms）時鐘誤差 = <b>300 公里</b> 距離偏差！</li>
+            </ul>
+          </div>
+          <div class="formula-badge">時間換算：TAI = GPST + 19s = UTC + 累積閏秒 （1 ms 誤差 = 300 km）</div>
+        </div>
+        <div class="visual-col">
+          <svg viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+            <rect width="800" height="400" fill="#f8fafc" rx="12"/>
+            <line x1="100" y1="100" x2="700" y2="100" stroke="#0284c7" stroke-width="4"/>
+            <text x="100" y="80" font-size="14" fill="#0369a1" font-weight="bold">GPST (原子鐘連續計時，絕無閏秒)</text>
+            <circle cx="200" cy="100" r="6" fill="#0284c7"/>
+            <circle cx="450" cy="100" r="6" fill="#0284c7"/>
+            <circle cx="650" cy="100" r="6" fill="#0284c7"/>
+            <line x1="100" y1="200" x2="430" y2="200" stroke="#16a34a" stroke-width="4"/>
+            <line x1="450" y1="200" x2="700" y2="200" stroke="#16a34a" stroke-width="4"/>
+            <text x="100" y="180" font-size="14" fill="#15803d" font-weight="bold">UTC (協調世界時，追隨地球自轉)</text>
+            <line x1="430" y1="200" x2="430" y2="230" stroke="#dc2626" stroke-width="2.5" stroke-dasharray="3,3"/>
+            <line x1="430" y1="230" x2="450" y2="230" stroke="#dc2626" stroke-width="3"/>
+            <line x1="450" y1="230" x2="450" y2="200" stroke="#dc2626" stroke-width="2.5" stroke-dasharray="3,3"/>
+            <text x="440" y="255" text-anchor="middle" font-size="12" fill="#b91c1c" font-weight="bold">插入 23:59:60 撥慢 1 秒</text>
+            <rect x="220" y="300" width="360" height="60" rx="8" fill="#ffffff" stroke="#0284c7" stroke-width="1.5"/>
+            <text x="400" y="325" text-anchor="middle" font-size="14" fill="#0369a1" font-weight="bold">TAI = GPST + 19s = UTC + 累積閏秒</text>
+            <text x="400" y="348" text-anchor="middle" font-size="12" fill="#dc2626">1 ms 鐘差 = 300 公里距離誤差！</text>
+          </svg>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span class="source-tag">文獻依據：<b>wiki/topic_06</b> (raw/02.pdf.pdf 名詞解釋 24-28)</span>
+        <div class="keyboard-hint">切換：<span class="key-cap">←</span> <span class="key-cap">→</span></div>
+      </div>
+    </div>
+
+    <!-- ==================== SLIDE 16 ==================== -->
+    <div class="slide" data-slide="16" data-unit="第四單元：基準與參考橢球" data-source="wiki/topic_05_大地基準與橢球體.md">
+      <div class="slide-header">
+        <div class="header-left">
+          <span class="unit-badge">第四單元：基準與參考橢球</span>
+          <h2 class="slide-title">16. 參考橢球體 vs 總地球橢球體——量身西裝 vs 均碼成衣</h2>
+        </div>
+        <div class="slide-counter"><span>16</span> / 29</div>
+      </div>
+      <div class="slide-body">
+        <div class="narrative-col">
+          <div class="analogy-card">
+            <div class="analogy-title">💡 零基礎白話比喻</div>
+            <div class="analogy-text">以前各國想讓自己地圖最準，把橢球推向自己國家，叫「參考橢球」（量身西裝，別人不能穿）；現在 GPS 出現，橢球中心必須與地心嚴格重合，求全球平均誤差最小，叫「總地球橢球」（均碼成衣）！</div>
+          </div>
+          <div class="key-points-card">
+            <h4>📌 局部參心 vs 全球地心</h4>
+            <ul>
+              <li><b>參考橢球（TWD67）</b>：局部定位，幾何中心不與質心重合，原點設 ξ₀=η₀=N₀=0。</li>
+              <li><b>總地球橢球（GRS80/WGS84）</b>：地心定位，中心與地球質心重合，全球水準面起伏平方和最小：∬ N² dσ = min。</li>
+              <li><b>定義約束</b>：4 個物理場常數（a, J₂, fM, ω）+ 3 個空間對齊約束。</li>
+            </ul>
+          </div>
+          <div class="formula-badge">最佳擬合準則：∬ N² dσ = min （全球大地起伏平方和最小）</div>
+        </div>
+        <div class="visual-col">
+          <svg viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+            <rect width="800" height="400" fill="#f8fafc" rx="12"/>
+            <circle cx="380" cy="210" r="6" fill="#dc2626"/>
+            <text x="360" y="235" font-size="13" fill="#dc2626" font-weight="bold">地球質心</text>
+            <ellipse cx="380" cy="210" rx="190" ry="135" fill="none" stroke="#2563eb" stroke-width="3"/>
+            <text x="580" y="195" font-size="14" fill="#1d4ed8" font-weight="bold">總地球橢球 (WGS84/GRS80)</text>
+            <text x="580" y="215" font-size="12" fill="#475569">地心定位，全球最密合</text>
+            <ellipse cx="430" cy="180" rx="170" ry="120" fill="none" stroke="#d97706" stroke-width="3" stroke-dasharray="6,4"/>
+            <circle cx="430" cy="180" r="5" fill="#d97706"/>
+            <text x="210" y="85" font-size="14" fill="#b45309" font-weight="bold">參考橢球 (TWD67 參心)</text>
+            <text x="210" y="105" font-size="12" fill="#475569">中心偏離質心數百米，僅局部密合</text>
+            <line x1="380" y1="210" x2="430" y2="180" stroke="#dc2626" stroke-width="2"/>
+          </svg>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span class="source-tag">文獻依據：<b>wiki/topic_05</b> (raw/05.md.md p.124-131)</span>
+        <div class="keyboard-hint">切換：<span class="key-cap">←</span> <span class="key-cap">→</span></div>
+      </div>
+    </div>
+
+    <!-- ==================== SLIDE 17 ==================== -->
+    <div class="slide" data-slide="17" data-unit="第四單元：基準與參考橢球" data-source="wiki/topic_05_大地基準與橢球體.md">
+      <div class="slide-header">
+        <div class="header-left">
+          <span class="unit-badge">第四單元：基準與參考橢球</span>
+          <h2 class="slide-title">17. 橢球上的兩大曲率半徑——卯酉圈 N vs 子午圈 M</h2>
+        </div>
+        <div class="slide-counter"><span>17</span> / 29</div>
+      </div>
+      <div class="slide-body">
+        <div class="narrative-col">
+          <div class="analogy-card">
+            <div class="analogy-title">💡 零基礎白話比喻</div>
+            <div class="analogy-text">扁橢球表面，南北向切出的密切圓叫「子午圈 M」，東西向法線插向自轉軸叫「卯酉圈 N」。記住一個大地測量震撼真相：<b>卯酉圈半徑 N 的圓心根本不在地心！</b></div>
+          </div>
+          <div class="key-points-card">
+            <h4>📌 橢球幾何曲率公式</h4>
+            <ul>
+              <li><b>卯酉圈曲率半徑 N</b>：沿法線延伸與 Z 軸相交的距離，N = a / √(1 - e²sin²φ)。</li>
+              <li><b>子午圈曲率半徑 M</b>：南北向橢圓曲線密切圓半徑，M = a(1 - e²) / (1 - e²sin²φ)³/²。</li>
+              <li><b>大小規律</b>：同緯度恆有 <b>M &lt; N</b>；法線交點落在赤道面下方 Ne²sinφ 處，非地心！</li>
+            </ul>
+          </div>
+          <div class="formula-badge">曲率半徑：N = a / √(1 - e²sin²φ) ； M &lt; N （同緯度卯酉圈大於子午圈）</div>
+        </div>
+        <div class="visual-col">
+          <svg viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+            <rect width="800" height="400" fill="#f8fafc" rx="12"/>
+            <ellipse cx="400" cy="200" rx="220" ry="150" fill="none" stroke="#475569" stroke-width="2.5"/>
+            <line x1="400" y1="30" x2="400" y2="370" stroke="#dc2626" stroke-width="2"/>
+            <polygon points="400,20 395,30 405,30" fill="#dc2626"/>
+            <text x="410" y="45" font-size="13" fill="#dc2626" font-weight="bold">自轉軸 Z</text>
+            <line x1="180" y1="200" x2="620" y2="200" stroke="#94a3b8" stroke-dasharray="4,4" stroke-width="1.5"/>
+            <text x="630" y="205" font-size="12" fill="#64748b">赤道面</text>
+            <circle cx="400" cy="200" r="5" fill="#334155"/>
+            <text x="412" y="195" font-size="13" fill="#334155" font-weight="bold">地心 O (幾何中心)</text>
+            <circle cx="560" cy="115" r="6" fill="#0284c7"/>
+            <text x="575" y="115" font-size="14" fill="#0369a1" font-weight="bold">測點 P (φ)</text>
+            <line x1="560" y1="115" x2="400" y2="280" stroke="#0284c7" stroke-width="3.5"/>
+            <circle cx="400" cy="280" r="6" fill="#dc2626"/>
+            <text x="475" y="215" font-size="15" fill="#0284c7" font-weight="bold">卯酉圈半徑 N</text>
+            <text x="260" y="285" font-size="13" fill="#dc2626" font-weight="bold">法線交點 (在赤道面下方 Ne²sinφ)</text>
+            <path d="M 520,70 A 50,50 0 0,1 600,160" fill="none" stroke="#16a34a" stroke-width="3" stroke-dasharray="4,4"/>
+            <text x="610" y="85" font-size="14" fill="#15803d" font-weight="bold">子午圈曲率 M (M &lt; N)</text>
+          </svg>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span class="source-tag">文獻依據：<b>wiki/topic_05</b> (raw/01.pdf.pdf 公式意義二、計算 3)</span>
+        <div class="keyboard-hint">切換：<span class="key-cap">←</span> <span class="key-cap">→</span></div>
+      </div>
+    </div>
+
+    <!-- ==================== SLIDE 18 ==================== -->
+    <div class="slide" data-slide="18" data-unit="第四單元：基準與參考橢球" data-source="wiki/topic_05_大地基準與橢球體.md">
+      <div class="slide-header">
+        <div class="header-left">
+          <span class="unit-badge">第四單元：基準與參考橢球</span>
+          <h2 class="slide-title">18. 經緯高轉空間直角——坐標互換與神速迭代</h2>
+        </div>
+        <div class="slide-counter"><span>18</span> / 29</div>
+      </div>
+      <div class="slide-body">
+        <div class="narrative-col">
+          <div class="analogy-card">
+            <div class="analogy-title">💡 零基礎白話比喻</div>
+            <div class="analogy-text">經緯度 (φ, λ, h) 轉直角 (X, Y, Z) 只要幾何分解；但反算時緯度卡在公式兩邊。測量學家發明神速迭代法：先猜高度是 0，代回計算重複 3 次，立刻精確到毫米以內！</div>
+          </div>
+          <div class="key-points-card">
+            <h4>📌 空間坐標正反算與收斂</h4>
+            <ul>
+              <li><b>正算公式</b>：X = (N+h)cosφcosλ ； Y = (N+h)cosφsinλ ； Z = [N(1-e²)+h]sinφ。</li>
+              <li><b>反算迭代演算法</b>：λ = tan⁻¹(Y/X)；初值令 h=0 得 φ₁，反覆代回。</li>
+              <li><b>極速收斂</b>：因第一偏心率平方 e² ≈ 0.0067 極小，<b>只需 3~4 次迭代即完全收斂</b>！</li>
+            </ul>
+          </div>
+          <div class="formula-badge">正算：(φ, λ, h) ➔ (X, Y, Z) ； 反算：3~4 次迭代極速收斂</div>
+        </div>
+        <div class="visual-col">
+          <svg viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+            <rect width="800" height="400" fill="#f8fafc" rx="12"/>
+            <rect x="80" y="80" width="220" height="100" rx="8" fill="#e0f2fe" stroke="#0284c7" stroke-width="2"/>
+            <text x="190" y="115" text-anchor="middle" font-size="16" fill="#0369a1" font-weight="bold">大地幾何坐標</text>
+            <text x="190" y="145" text-anchor="middle" font-size="18" fill="#0f172a" font-weight="bold">(φ, λ, h)</text>
+            <text x="190" y="165" text-anchor="middle" font-size="12" fill="#64748b">緯度、經度、橢球高</text>
+            <line x1="310" y1="110" x2="480" y2="110" stroke="#16a34a" stroke-width="3"/>
+            <polygon points="480,110 470,104 470,116" fill="#16a34a"/>
+            <text x="395" y="100" text-anchor="middle" font-size="13" fill="#15803d" font-weight="bold">正算 (解析幾何)</text>
+            <line x1="480" y1="150" x2="310" y2="150" stroke="#dc2626" stroke-width="3"/>
+            <polygon points="310,150 320,144 320,156" fill="#dc2626"/>
+            <text x="395" y="175" text-anchor="middle" font-size="13" fill="#b91c1c" font-weight="bold">反算 (3~4次迭代收斂)</text>
+            <rect x="490" y="80" width="230" height="100" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+            <text x="605" y="115" text-anchor="middle" font-size="16" fill="#b45309" font-weight="bold">地心地固直角坐標</text>
+            <text x="605" y="145" text-anchor="middle" font-size="18" fill="#0f172a" font-weight="bold">(X, Y, Z)</text>
+            <text x="605" y="165" text-anchor="middle" font-size="12" fill="#64748b">地心為原點，單位公尺</text>
+            <rect x="180" y="240" width="440" height="70" rx="8" fill="#ffffff" stroke="#475569" stroke-width="1.5"/>
+            <text x="400" y="265" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="bold">X = (N+h)cosφcosλ, Y = (N+h)cosφsinλ</text>
+            <text x="400" y="290" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="bold">Z = [N(1 - e²) + h]sinφ</text>
+          </svg>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span class="source-tag">文獻依據：<b>wiki/topic_05</b> (raw/01.pdf.pdf 推導 1,2、計算 1,2)</span>
+        <div class="keyboard-hint">切換：<span class="key-cap">←</span> <span class="key-cap">→</span></div>
+      </div>
+    </div>
+
+    <!-- ==================== SLIDE 19 ==================== -->
+    <div class="slide" data-slide="19" data-unit="第四單元：基準與參考橢球" data-source="wiki/topic_07_國際參考框架與現代動態基準.md">
+      <div class="slide-header">
+        <div class="header-left">
+          <span class="unit-badge">第四單元：基準與參考橢球</span>
+          <h2 class="slide-title">19. 現代測地五大天王——VLBI, SLR, LLR, GNSS, DORIS</h2>
+        </div>
+        <div class="slide-counter"><span>19</span> / 29</div>
+      </div>
+      <div class="slide-body">
+        <div class="narrative-col">
+          <div class="analogy-card">
+            <div class="analogy-title">💡 零基礎白話比喻</div>
+            <div class="analogy-text">要建立毫米級全球坐標，現代測地派出五路神仙：望遠鏡看深空類星體（VLBI）、雷射打向衛星與月球鏡面（SLR/LLR）、衛星導航（GNSS）與都卜勒系統（DORIS）！</div>
+          </div>
+          <div class="key-points-card">
+            <h4>📌 空間測地技術核心分工</h4>
+            <ul>
+              <li><b>VLBI</b>：觀測射電源時間差，<b>唯一能測定全套 EOP</b>，維持天球 ICRF。</li>
+              <li><b>SLR</b>：衛星雷射測距（LAGEOS 5900 km），精度 &lt; 1 cm，決定地球質心。</li>
+              <li><b>GNSS（GPS）</b>：雙頻密集測站網，負責將框架加密至陸地各區域。</li>
+              <li><b>國際聯合</b>：五大技術聯合平差解算，產出權威的 <b>ITRF</b> 國際地球參考框架。</li>
+            </ul>
+          </div>
+          <div class="formula-badge">ITRF 實現：VLBI + SLR + LLR + GNSS + DORIS 聯合平差</div>
+        </div>
+        <div class="visual-col">
+          <svg viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+            <rect width="800" height="400" fill="#f8fafc" rx="12"/>
+            <rect x="50" y="60" width="130" height="90" rx="8" fill="#e0e7ff" stroke="#4338ca" stroke-width="1.5"/>
+            <text x="115" y="90" text-anchor="middle" font-size="16" fill="#312e81" font-weight="bold">VLBI</text>
+            <text x="115" y="115" text-anchor="middle" font-size="12" fill="#4338ca">射電源時間差</text>
+            <text x="115" y="135" text-anchor="middle" font-size="11" fill="#dc2626" font-weight="bold">唯一定全套EOP</text>
+            <rect x="200" y="60" width="130" height="90" rx="8" fill="#fce7f3" stroke="#be185d" stroke-width="1.5"/>
+            <text x="265" y="90" text-anchor="middle" font-size="16" fill="#831843" font-weight="bold">SLR</text>
+            <text x="265" y="115" text-anchor="middle" font-size="12" fill="#9d174d">衛星雷射測距</text>
+            <text x="265" y="135" text-anchor="middle" font-size="11" fill="#dc2626" font-weight="bold">決定地心質心</text>
+            <rect x="350" y="60" width="110" height="90" rx="8" fill="#fef3c7" stroke="#b45309" stroke-width="1.5"/>
+            <text x="405" y="90" text-anchor="middle" font-size="16" fill="#78350f" font-weight="bold">LLR</text>
+            <text x="405" y="115" text-anchor="middle" font-size="12" fill="#b45309">月球雷射測距</text>
+            <text x="405" y="135" text-anchor="middle" font-size="11" fill="#475569">黃赤交角/引力</text>
+            <rect x="480" y="60" width="130" height="90" rx="8" fill="#dcfce7" stroke="#15803d" stroke-width="1.5"/>
+            <text x="545" y="90" text-anchor="middle" font-size="16" fill="#14532d" font-weight="bold">GNSS / GPS</text>
+            <text x="545" y="115" text-anchor="middle" font-size="12" fill="#15803d">雙頻微波測距</text>
+            <text x="545" y="135" text-anchor="middle" font-size="11" fill="#dc2626" font-weight="bold">全臺密布站網</text>
+            <rect x="630" y="60" width="120" height="90" rx="8" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.5"/>
+            <text x="690" y="90" text-anchor="middle" font-size="16" fill="#134e4a" font-weight="bold">DORIS</text>
+            <text x="690" y="115" text-anchor="middle" font-size="12" fill="#0f766e">上行都卜勒</text>
+            <text x="690" y="135" text-anchor="middle" font-size="11" fill="#475569">軌道測定/集中式</text>
+            <line x1="400" y1="160" x2="400" y2="230" stroke="#0284c7" stroke-width="3"/>
+            <polygon points="400,230 393,220 407,220" fill="#0284c7"/>
+            <rect x="250" y="240" width="300" height="60" rx="8" fill="#0284c7"/>
+            <text x="400" y="275" text-anchor="middle" font-size="16" fill="#ffffff" font-weight="bold">ITRF 國際地球參考框架</text>
+          </svg>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span class="source-tag">文獻依據：<b>wiki/topic_07</b> (raw/01.pdf.pdf 申論比較 8)</span>
+        <div class="keyboard-hint">切換：<span class="key-cap">←</span> <span class="key-cap">→</span></div>
+      </div>
+    </div>
+
+    <!-- ==================== SLIDE 20 ==================== -->
+    <div class="slide" data-slide="20" data-unit="第四單元：基準與參考橢球" data-source="wiki/topic_07_國際參考框架與現代動態基準.md">
+      <div class="slide-header">
+        <div class="header-left">
+          <span class="unit-badge">第四單元：基準與參考橢球</span>
+          <h2 class="slide-title">20. 板塊飄移與臺灣雙框架策略——TWD97 遇上 TTRF</h2>
+        </div>
+        <div class="slide-counter"><span>20</span> / 29</div>
+      </div>
+      <div class="slide-body">
+        <div class="narrative-col">
+          <div class="analogy-card">
+            <div class="analogy-title">💡 零基礎白話比喻</div>
+            <div class="analogy-text">臺灣踩在兩大板塊交界，地表每年往西北擠壓數公分！地圖坐標天天變，你家地契會大亂；十年不改，衛星又對不上。內政部提出<b>雙框架策略</b>：地籍凍結在靜態 TWD97，動態 CORS 即時更新 TTRF，中間靠變位模型隨時轉換！</div>
+          </div>
+          <div class="key-points-card">
+            <h4>📌 臺灣雙框架架構優勢</h4>
+            <ul>
+              <li><b>TWD97[2020]</b>：法定靜態基準，保障土地地籍法律權益長期穩定。</li>
+              <li><b>TTRF</b>：即時時變框架，CORS 連續站對齊 ITRF2020，捕捉地震同震位移。</li>
+              <li><b>地殼變位模型</b>：數值平差驗證，有效消除測區內板塊變形誤差。</li>
+            </ul>
+          </div>
+          <div class="formula-badge">策略：TWD97（法定地籍） ⮂ [地殼變位模型] ⮂ TTRF（動態CORS）</div>
+        </div>
+        <div class="visual-col">
+          <svg viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+            <rect width="800" height="400" fill="#f8fafc" rx="12"/>
+            <rect x="80" y="70" width="220" height="110" rx="8" fill="#dbeafe" stroke="#1d4ed8" stroke-width="2"/>
+            <text x="190" y="105" text-anchor="middle" font-size="16" fill="#1e40af" font-weight="bold">TWD97 法定基準</text>
+            <text x="190" y="130" text-anchor="middle" font-size="13" fill="#334155">【靜態框架・凍結曆元】</text>
+            <text x="190" y="155" text-anchor="middle" font-size="12" fill="#64748b">保障產權界址永久不變</text>
+            <line x1="310" y1="125" x2="480" y2="125" stroke="#ea580c" stroke-width="4"/>
+            <polygon points="310,125 320,119 320,131" fill="#ea580c"/>
+            <polygon points="480,125 470,119 470,131" fill="#ea580c"/>
+            <text x="395" y="115" text-anchor="middle" font-size="13" fill="#c2410c" font-weight="bold">地殼變形模型</text>
+            <text x="395" y="145" text-anchor="middle" font-size="11" fill="#64748b">消除板塊擠壓位移</text>
+            <rect x="490" y="70" width="230" height="110" rx="8" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+            <text x="605" y="105" text-anchor="middle" font-size="16" fill="#14532d" font-weight="bold">TTRF 現代框架</text>
+            <text x="605" y="130" text-anchor="middle" font-size="13" fill="#334155">【動態時變・連續CORS】</text>
+            <text x="605" y="155" text-anchor="middle" font-size="12" fill="#15803d">直接對齊國際 ITRF2020</text>
+          </svg>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span class="source-tag">文獻依據：<b>wiki/topic_07</b> (raw/01.pdf.pdf 申論比較 7)</span>
+        <div class="keyboard-hint">切換：<span class="key-cap">←</span> <span class="key-cap">→</span></div>
+      </div>
+    </div>
+
+    <!-- ==================== SLIDE 21 ==================== -->
+    <div class="slide" data-slide="21" data-unit="第四單元：基準與參考橢球" data-source="wiki/topic_08_臺灣大地基準與全球系統比較.md">
+      <div class="slide-header">
+        <div class="header-left">
+          <span class="unit-badge">第四單元：基準與參考橢球</span>
+          <h2 class="slide-title">21. 臺灣大地基準大對決——TWD67, TWD97 與 WGS84</h2>
+        </div>
+        <div class="slide-counter"><span>21</span> / 29</div>
+      </div>
+      <div class="slide-body">
+        <div class="narrative-col">
+          <div class="analogy-card">
+            <div class="analogy-title">💡 零基礎白話比喻</div>
+            <div class="analogy-text">老測量員用 TWD67，在埔里虎子山頂看星星；現代無人機與工程用 TWD97，仰賴全臺 8 大追蹤站；手機導航預設吃美軍 WGS84。三者坐標如果搞混，在地圖上會直接飛走近一公里！</div>
+          </div>
+          <div class="key-points-card">
+            <h4>📌 三大基準技術指標</h4>
+            <ul>
+              <li><b>TWD67</b>：參心局部基準，GRS67 橢球，埔里虎子山原點，水平高程分離。</li>
+              <li><b>TWD97</b>：地心地固基準，GRS80 橢球，8 衛星追蹤站聯測 51 個 IGS 站，三維一體。</li>
+              <li><b>WGS84</b>：GPS 基準，與 GRS80 僅扁率小數點第 9 位極微差異（實務完全互通）。</li>
+            </ul>
+          </div>
+          <div class="formula-badge">比較核心：TWD67（參心水平） vs TWD97/WGS84（地心地固三維）</div>
+        </div>
+        <div class="visual-col">
+          <svg viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+            <rect width="800" height="400" fill="#f8fafc" rx="12"/>
+            <rect x="60" y="50" width="200" height="260" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+            <text x="160" y="80" text-anchor="middle" font-size="16" fill="#334155" font-weight="bold">TWD67 (舊制)</text>
+            <text x="75" y="115" font-size="12" fill="#64748b">類型：參心局部基準</text>
+            <text x="75" y="140" font-size="12" fill="#64748b">橢球：GRS67 (a=6378160)</text>
+            <text x="75" y="165" font-size="12" fill="#64748b">原點：埔里虎子山三角點</text>
+            <text x="75" y="190" font-size="12" fill="#64748b">技術：傳統三角測量</text>
+            <text x="75" y="215" font-size="12" fill="#dc2626" font-weight="bold">分量：水平與高程分開</text>
+            <rect x="290" y="50" width="220" height="260" rx="8" fill="#ffffff" stroke="#0284c7" stroke-width="2.5"/>
+            <text x="400" y="80" text-anchor="middle" font-size="16" fill="#0369a1" font-weight="bold">TWD97 (現行國標)</text>
+            <text x="305" y="115" font-size="12" fill="#334155">類型：地心地固基準</text>
+            <text x="305" y="140" font-size="12" fill="#334155">橢球：GRS80 (a=6378137)</text>
+            <text x="305" y="165" font-size="12" fill="#334155">起算：8衛星站+51 IGS站</text>
+            <text x="305" y="190" font-size="12" fill="#334155">解算：ITRF94@1997.0</text>
+            <text x="305" y="215" font-size="12" fill="#0369a1" font-weight="bold">分量：三維一體 (h)</text>
+            <rect x="540" y="50" width="200" height="260" rx="8" fill="#ffffff" stroke="#16a34a" stroke-width="1.5"/>
+            <text x="640" y="80" text-anchor="middle" font-size="16" fill="#15803d" font-weight="bold">WGS84 (全球衛星)</text>
+            <text x="555" y="115" font-size="12" fill="#64748b">類型：全球地心基準</text>
+            <text x="555" y="140" font-size="12" fill="#64748b">橢球：WGS84 橢球</text>
+            <text x="555" y="165" font-size="12" fill="#64748b">起算：全球GPS追蹤站網</text>
+            <text x="555" y="190" font-size="12" fill="#64748b">版本：G730, G873</text>
+            <text x="555" y="215" font-size="12" fill="#15803d" font-weight="bold">與GRS80差0.1mm</text>
+          </svg>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span class="source-tag">文獻依據：<b>wiki/topic_08</b> (raw/01.pdf.pdf 申論比較 2)</span>
+        <div class="keyboard-hint">切換：<span class="key-cap">←</span> <span class="key-cap">→</span></div>
+      </div>
+    </div>
+
+    <!-- ==================== SLIDE 22 ==================== -->
+    <div class="slide" data-slide="22" data-unit="第四單元：基準與參考橢球" data-source="wiki/topic_08_臺灣大地基準與全球系統比較.md">
+      <div class="slide-header">
+        <div class="header-left">
+          <span class="unit-badge">第四單元：基準與參考橢球</span>
+          <h2 class="slide-title">22. 大地高與正高的橋樑——h = H + N 與臺灣 TWVD2001</h2>
+        </div>
+        <div class="slide-counter"><span>22</span> / 29</div>
+      </div>
+      <div class="slide-body">
+        <div class="narrative-col">
+          <div class="analogy-card">
+            <div class="analogy-title">💡 零基礎白話比喻</div>
+            <div class="analogy-text">GPS 算出來的是幾何「橢球高 h」，但水會往哪流看的是海拔「正高 H」。為什麼高程選基隆？因為基隆港驗潮站累積了數十年完整觀測數據，能精確算出排除了風浪潮汐的平均海水面（MSL）！</div>
+          </div>
+          <div class="key-points-card">
+            <h4>📌 幾何高與物理高程換算</h4>
+            <ul>
+              <li><b>核心公式</b>：h（橢球高）= H（正高）+ N（大地起伏）。</li>
+              <li><b>TWVD2001</b>：臺灣高程基準 2001，基隆平均海水面起算，不在 TWD97 定義內。</li>
+              <li><b>工程禁忌</b>：嚴禁用 GPS 測出的幾何橢球高直接設計排水坡度，否則水可能會倒流！</li>
+            </ul>
+          </div>
+          <div class="formula-badge">高程關係：h = H + N （大地高 = 正高 + 大地起伏）</div>
+        </div>
+        <div class="visual-col">
+          <svg viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+            <rect width="800" height="400" fill="#f8fafc" rx="12"/>
+            <path d="M 100,100 Q 300,60 500,110 T 700,90" fill="none" stroke="#475569" stroke-width="3"/>
+            <circle cx="500" cy="110" r="6" fill="#dc2626"/>
+            <text x="520" y="105" font-size="14" fill="#dc2626" font-weight="bold">地表測點 P</text>
+            <path d="M 100,200 Q 300,180 500,220 T 700,190" fill="none" stroke="#0284c7" stroke-width="3"/>
+            <text x="120" y="190" font-size="13" fill="#0369a1" font-weight="bold">大地水準面 (基隆海水面 TWVD2001 正高 H=0)</text>
+            <path d="M 100,290 Q 300,290 500,290 T 700,290" fill="none" stroke="#16a34a" stroke-width="3" stroke-dasharray="6,4"/>
+            <text x="120" y="315" font-size="13" fill="#15803d" font-weight="bold">參考橢球面 (TWD97 幾何橢球高 h=0)</text>
+            <line x1="460" y1="110" x2="460" y2="290" stroke="#0f172a" stroke-width="2.5"/>
+            <text x="400" y="200" font-size="14" fill="#0f172a" font-weight="bold">大地高 h</text>
+            <line x1="500" y1="110" x2="500" y2="220" stroke="#0284c7" stroke-width="2.5"/>
+            <text x="510" y="165" font-size="14" fill="#0369a1" font-weight="bold">正高 H (海拔)</text>
+            <line x1="500" y1="220" x2="500" y2="290" stroke="#16a34a" stroke-width="2.5"/>
+            <text x="510" y="260" font-size="14" fill="#15803d" font-weight="bold">大地起伏 N</text>
+            <rect x="580" y="220" width="180" height="50" rx="6" fill="#ffffff" stroke="#dc2626" stroke-width="1.5"/>
+            <text x="670" y="250" text-anchor="middle" font-size="15" fill="#b91c1c" font-weight="bold">h = H + N</text>
+          </svg>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span class="source-tag">文獻依據：<b>wiki/topic_08</b> (raw/01.pdf.pdf 名詞解釋一-6)</span>
+        <div class="keyboard-hint">切換：<span class="key-cap">←</span> <span class="key-cap">→</span></div>
+      </div>
+    </div>
+
+    <!-- ==================== SLIDE 23 ==================== -->
+    <div class="slide" data-slide="23" data-unit="第五單元：基準轉換與地圖投影" data-source="wiki/topic_09_基準轉換與坐標變換數學模型.md">
+      <div class="slide-header">
+        <div class="header-left">
+          <span class="unit-badge">第五單元：基準轉換與地圖投影</span>
+          <h2 class="slide-title">23. 坐標系轉換魔法——三參數、七參數與 Molodensky</h2>
+        </div>
+        <div class="slide-counter"><span>23</span> / 29</div>
+      </div>
+      <div class="slide-body">
+        <div class="narrative-col">
+          <div class="analogy-card">
+            <div class="analogy-title">💡 零基礎白話比喻</div>
+            <div class="analogy-text">有兩個三維箱子，中心不同（3平移）、擺放朝向偏了幾度（3旋轉）、尺子縮放比例不同（1尺度）。把坐標準確倒過去的 7 個密碼，就叫「七參數空間相似轉換」！</div>
+          </div>
+          <div class="key-points-card">
+            <h4>📌 三維坐標轉換模型體系</h4>
+            <ul>
+              <li><b>七參數 (Bursa-Wolf)</b>：3 平移 (ΔX, ΔY, ΔZ) + 3 旋轉 (εx, εy, εz) + 1 尺度比例 (S=1+D)。</li>
+              <li><b>反對稱小角度線性化</b>：X₂ ≈ X₁ + T + DX₁ + R'X₁（ITRF 跨框架標準）。</li>
+              <li><b>三參數平移</b>：僅平移原點，為大範圍工程近似法；Molodensky 則跳過直角坐標直接經緯高轉換。</li>
+            </ul>
+          </div>
+          <div class="formula-badge">七參數相似轉換：X₂ = S · R(ε) · X₁ + T （完整嚴格轉換）</div>
+        </div>
+        <div class="visual-col">
+          <svg viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+            <rect width="800" height="400" fill="#f8fafc" rx="12"/>
+            <line x1="200" y1="260" x2="300" y2="260" stroke="#0284c7" stroke-width="3"/>
+            <line x1="200" y1="260" x2="200" y2="160" stroke="#0284c7" stroke-width="3"/>
+            <line x1="200" y1="260" x2="140" y2="310" stroke="#0284c7" stroke-width="3"/>
+            <text x="180" y="275" font-size="13" fill="#0369a1" font-weight="bold">系 1 (X1,Y1,Z1)</text>
+            <line x1="200" y1="260" x2="500" y2="180" stroke="#dc2626" stroke-width="3" stroke-dasharray="6,4"/>
+            <polygon points="500,180 488,181 494,192" fill="#dc2626"/>
+            <text x="350" y="210" text-anchor="middle" font-size="14" fill="#b91c1c" font-weight="bold">3 平移 (ΔX, ΔY, ΔZ)</text>
+            <line x1="500" y1="180" x2="610" y2="160" stroke="#16a34a" stroke-width="3"/>
+            <line x1="500" y1="180" x2="480" y2="70" stroke="#16a34a" stroke-width="3"/>
+            <line x1="500" y1="180" x2="430" y2="230" stroke="#16a34a" stroke-width="3"/>
+            <text x="510" y="195" font-size="13" fill="#15803d" font-weight="bold">系 2 (X2,Y2,Z2)</text>
+            <text x="560" y="110" font-size="13" fill="#15803d" font-weight="bold">3 旋轉角 (εx, εy, εz)</text>
+            <text x="560" y="130" font-size="13" fill="#15803d" font-weight="bold">+ 1 尺度比例 S</text>
+            <rect x="220" y="325" width="360" height="50" rx="8" fill="#ffffff" stroke="#475569" stroke-width="1.5"/>
+            <text x="400" y="355" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="bold">七參數完整相似轉換：3平移 + 3旋轉 + 1尺度</text>
+          </svg>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span class="source-tag">文獻依據：<b>wiki/topic_09</b> (raw/01.pdf.pdf 推導 5)</span>
+        <div class="keyboard-hint">切換：<span class="key-cap">←</span> <span class="key-cap">→</span></div>
+      </div>
+    </div>
+
+    <!-- ==================== SLIDE 24 ==================== -->
+    <div class="slide" data-slide="24" data-unit="第五單元：基準轉換與地圖投影" data-source="wiki/topic_09_基準轉換與坐標變換數學模型.md">
+      <div class="slide-header">
+        <div class="header-left">
+          <span class="unit-badge">第五單元：基準轉換與地圖投影</span>
+          <h2 class="slide-title">24. 臺灣實務快速換算——TWD67 轉 TWD97（防呆口訣版）</h2>
+        </div>
+        <div class="slide-counter"><span>24</span> / 29</div>
+      </div>
+      <div class="slide-body">
+        <div class="narrative-col">
+          <div class="analogy-card">
+            <div class="analogy-title">💡 零基礎白話比喻</div>
+            <div class="analogy-text">工地上拿到舊手繪地籍圖（TWD67）要套進新圖（TWD97），記住江湖秘笈：<b>老變新往東南，東加 828、北減 197！</b> 兩者在地圖上合成位移了足足 851 公尺！</div>
+          </div>
+          <div class="key-points-card">
+            <h4>📌 臺灣經驗轉換公式與精度</h4>
+            <ul>
+              <li><b>由舊轉新 (67 ➔ 97)</b>：E₉₇ = E₆₇ + 828 m ； N₉₇ = N₆₇ - 197 m。</li>
+              <li><b>由新逆推 (97 ➔ 67)</b>：E₆₇ = E₉₇ - 828 m ； N₆₇ = N₉₇ + 197 m。</li>
+              <li><b>位移合向量</b>：√(828² + 197²) ≈ 851.1 m（全島殘差約 5 m 內；最小曲率法降至 30 cm）。</li>
+            </ul>
+          </div>
+          <div class="formula-badge">口訣防呆：67 ➔ 97 是東加 828、北減 197 （合成位移 851.1 米）</div>
+        </div>
+        <div class="visual-col">
+          <svg viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+            <rect width="800" height="400" fill="#f8fafc" rx="12"/>
+            <circle cx="230" cy="240" r="8" fill="#d97706"/>
+            <text x="180" y="275" font-size="16" fill="#b45309" font-weight="bold">TWD67 舊點位</text>
+            <line x1="230" y1="240" x2="520" y2="240" stroke="#0284c7" stroke-width="3"/>
+            <polygon points="520,240 508,234 508,246" fill="#0284c7"/>
+            <text x="375" y="230" text-anchor="middle" font-size="15" fill="#0369a1" font-weight="bold">+ 828 公尺 (東向加)</text>
+            <line x1="520" y1="240" x2="520" y2="120" stroke="#16a34a" stroke-width="3"/>
+            <polygon points="520,120 514,132 526,132" fill="#16a34a"/>
+            <text x="585" y="185" font-size="15" fill="#15803d" font-weight="bold">- 197 公尺 (北向減)</text>
+            <line x1="230" y1="240" x2="520" y2="120" stroke="#dc2626" stroke-width="4"/>
+            <polygon points="520,120 506,125 514,135" fill="#dc2626"/>
+            <text x="350" y="160" text-anchor="middle" font-size="16" fill="#b91c1c" font-weight="bold">合向量位移 851.1 公尺！</text>
+            <circle cx="520" cy="120" r="8" fill="#dc2626"/>
+            <text x="540" y="110" font-size="16" fill="#b91c1c" font-weight="bold">TWD97 新點位</text>
+          </svg>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span class="source-tag">文獻依據：<b>wiki/topic_09</b> (raw/01.pdf.pdf 計算 7、申論比較 10)</span>
+        <div class="keyboard-hint">切換：<span class="key-cap">←</span> <span class="key-cap">→</span></div>
+      </div>
+    </div>
+
+    <!-- ==================== SLIDE 25 ==================== -->
+    <div class="slide" data-slide="25" data-unit="第五單元：基準轉換與地圖投影" data-source="wiki/topic_10_地圖投影理論與高斯克呂格投影.md">
+      <div class="slide-header">
+        <div class="header-left">
+          <span class="unit-badge">第五單元：基準轉換與地圖投影</span>
+          <h2 class="slide-title">25. 地圖投影的終極矛盾——不可展曲面與蒂索變形橢圓</h2>
+        </div>
+        <div class="slide-counter"><span>25</span> / 29</div>
+      </div>
+      <div class="slide-body">
+        <div class="narrative-col">
+          <div class="analogy-card">
+            <div class="analogy-title">💡 零基礎白話比喻</div>
+            <div class="analogy-text">剝下來的圓形橘子皮想平整壓扁在桌上，邊緣一定會破裂！橢球面是不可展曲面，投影到平圖紙上，長度、角度或面積至少有一樣會變形，不可能三全其美！</div>
+          </div>
+          <div class="key-points-card">
+            <h4>📌 蒂索變形橢圓 (Tissot's Indicatrix)</h4>
+            <ul>
+              <li><b>長度比</b>：m = ds / dS。橢球面微小單位正圓投影後必然變形成橢圓。</li>
+              <li><b>正形（等角）投影</b>：主半軸 a = b，長度比與方向無關，微小角度嚴格保真。</li>
+              <li><b>等積投影</b>：a · b = 1，面積不變形；任意投影則為二者折衷。</li>
+            </ul>
+          </div>
+          <div class="formula-badge">正形條件：a = b （測量工程首選，保持幾何角度嚴格不變形）</div>
+        </div>
+        <div class="visual-col">
+          <svg viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+            <rect width="800" height="400" fill="#f8fafc" rx="12"/>
+            <circle cx="220" cy="180" r="50" fill="#dbeafe" stroke="#2563eb" stroke-width="2.5"/>
+            <text x="220" y="175" text-anchor="middle" font-size="14" fill="#1e40af" font-weight="bold">橢球面上微元</text>
+            <text x="220" y="195" text-anchor="middle" font-size="13" fill="#1e40af">正圓 (dS, r=1)</text>
+            <line x1="300" y1="180" x2="440" y2="180" stroke="#64748b" stroke-width="3"/>
+            <polygon points="440,180 430,174 430,186" fill="#64748b"/>
+            <text x="370" y="165" text-anchor="middle" font-size="13" fill="#475569">地圖投影映射</text>
+            <ellipse cx="560" cy="180" rx="75" ry="40" fill="#fed7aa" stroke="#ea580c" stroke-width="2.5"/>
+            <line x1="560" y1="180" x2="635" y2="180" stroke="#dc2626" stroke-width="2"/>
+            <text x="595" y="170" font-size="12" fill="#b91c1c" font-weight="bold">長半軸 a</text>
+            <line x1="560" y1="180" x2="560" y2="140" stroke="#dc2626" stroke-width="2"/>
+            <text x="565" y="155" font-size="12" fill="#b91c1c" font-weight="bold">短半軸 b</text>
+            <text x="560" y="240" text-anchor="middle" font-size="14" fill="#c2410c" font-weight="bold">蒂索變形橢圓 (Tissot)</text>
+            <rect x="250" y="290" width="300" height="50" rx="6" fill="#ffffff" stroke="#2563eb" stroke-width="1.5"/>
+            <text x="400" y="320" text-anchor="middle" font-size="14" fill="#1d4ed8" font-weight="bold">若 a = b 則為等角 (正形) 投影！</text>
+          </svg>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span class="source-tag">文獻依據：<b>wiki/topic_10</b> (raw/04.md.md 6.1 節)</span>
+        <div class="keyboard-hint">切換：<span class="key-cap">←</span> <span class="key-cap">→</span></div>
+      </div>
+    </div>
+
+    <!-- ==================== SLIDE 26 ==================== -->
+    <div class="slide" data-slide="26" data-unit="第五單元：基準轉換與地圖投影" data-source="wiki/topic_10_地圖投影理論與高斯克呂格投影.md">
+      <div class="slide-header">
+        <div class="header-left">
+          <span class="unit-badge">第五單元：基準轉換與地圖投影</span>
+          <h2 class="slide-title">26. 高斯－克呂格投影——橫軸切圓柱的正形奇蹟</h2>
+        </div>
+        <div class="slide-counter"><span>26</span> / 29</div>
+      </div>
+      <div class="slide-body">
+        <div class="narrative-col">
+          <div class="analogy-card">
+            <div class="analogy-title">💡 零基礎白話比喻</div>
+            <div class="analogy-text">高斯想出絕招：拿橢圓紙筒「橫著套」在地球腰上，剛好貼緊中央子午線。在相切這條線上，長度完全沒有拉伸（m₀=1.0）；只要限制兩側寬度分帶，誤差就能壓到極小！</div>
+          </div>
+          <div class="key-points-card">
+            <h4>📌 高斯投影三大基本條件</h4>
+            <ul>
+              <li><b>條件一</b>：中央子午線投影為直線坐標軸。</li>
+              <li><b>條件二</b>：中央子午線無長度變形（尺度比 m₀ = 1.0）。</li>
+              <li><b>條件三</b>：滿足柯西－黎曼條件，微小圖形保角正形。</li>
+              <li><b>子午線收斂角 γ</b>：坐標北與真子午線切線夾角，東正西負。</li>
+            </ul>
+          </div>
+          <div class="formula-badge">高斯正算：x 為經差 l 的奇函數，y 為 l 的偶函數</div>
+        </div>
+        <div class="visual-col">
+          <svg viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+            <rect width="800" height="400" fill="#f8fafc" rx="12"/>
+            <circle cx="360" cy="200" r="130" fill="#e2e8f0" stroke="#475569" stroke-width="2"/>
+            <rect x="330" y="40" width="60" height="320" fill="#bae6fd" opacity="0.4" stroke="#0284c7" stroke-width="2"/>
+            <line x1="360" y1="40" x2="360" y2="360" stroke="#dc2626" stroke-width="3.5"/>
+            <text x="375" y="60" font-size="14" fill="#b91c1c" font-weight="bold">中央子午線 (相切 m₀ = 1.0)</text>
+            <text x="375" y="80" font-size="12" fill="#b91c1c">嚴格無長度變形！</text>
+            <line x1="360" y1="140" x2="465" y2="130" stroke="#ea580c" stroke-width="2.5"/>
+            <polygon points="465,130 453,124 455,136" fill="#ea580c"/>
+            <text x="475" y="135" font-size="13" fill="#c2410c" font-weight="bold">離中央經線越遠，拉伸變形越大</text>
+            <rect x="540" y="240" width="220" height="80" rx="8" fill="#ffffff" stroke="#0284c7" stroke-width="1.5"/>
+            <text x="555" y="265" font-size="13" fill="#0369a1" font-weight="bold">橫軸橢圓柱等角投影</text>
+            <text x="555" y="288" font-size="12" fill="#334155">保持微小圖形角度嚴格不變</text>
+            <text x="555" y="308" font-size="12" fill="#64748b">大比例尺測量的首選投影</text>
+          </svg>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span class="source-tag">文獻依據：<b>wiki/topic_10</b> (raw/04.md.md 6.2-6.4 節)</span>
+        <div class="keyboard-hint">切換：<span class="key-cap">←</span> <span class="key-cap">→</span></div>
+      </div>
+    </div>
+
+    <!-- ==================== SLIDE 27 ==================== -->
+    <div class="slide" data-slide="27" data-unit="第五單元：基準轉換與地圖投影" data-source="wiki/topic_11_UTM投影與臺灣TM2分帶系統.md">
+      <div class="slide-header">
+        <div class="header-left">
+          <span class="unit-badge">第五單元：基準轉換與地圖投影</span>
+          <h2 class="slide-title">27. 全球通用橫麥卡托 (UTM)——割線圓柱與 60 分帶</h2>
+        </div>
+        <div class="slide-counter"><span>27</span> / 29</div>
+      </div>
+      <div class="slide-body">
+        <div class="narrative-col">
+          <div class="analogy-card">
+            <div class="analogy-title">💡 零基礎白話比喻</div>
+            <div class="analogy-text">高斯投影切線中央不變形，但邊緣拉伸快；美軍把圓柱「割入」地球，讓中央經線微縮千分之 0.4（0.9996），在 180 公里處割出兩條無變形線，全帶變形更均衡！為什麼假東設 50 萬米？為了保證最西邊永遠不會出現負數！</div>
+          </div>
+          <div class="key-points-card">
+            <h4>📌 UTM 規範與臺灣位置</h4>
+            <ul>
+              <li><b>割線圓柱</b>：中央子午線尺度比 k₀ = 0.9996；割線處（距中央 180 km）無變形（k=1.0）。</li>
+              <li><b>分帶體系</b>：全球 60 帶（每帶 6°），臺灣本島在 <b>Zone 51（中央經線 123°E）</b>。</li>
+              <li><b>防負坐標</b>：中央子午線假東 500,000 m；北半球赤道 N=0，南半球赤道假北 10,000,000 m。</li>
+            </ul>
+          </div>
+          <div class="formula-badge">UTM 分帶：帶號 = ⌊(λ + 180°)/6°⌋ + 1 （臺灣在第 51 帶，中央經線 123°E）</div>
+        </div>
+        <div class="visual-col">
+          <svg viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+            <rect width="800" height="400" fill="#f8fafc" rx="12"/>
+            <line x1="100" y1="290" x2="700" y2="290" stroke="#334155" stroke-width="2"/>
+            <line x1="400" y1="50" x2="400" y2="330" stroke="#334155" stroke-width="2"/>
+            <text x="400" y="35" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="bold">尺度比 k (中央子午線)</text>
+            <line x1="100" y1="180" x2="700" y2="180" stroke="#94a3b8" stroke-dasharray="4,4" stroke-width="2"/>
+            <text x="710" y="185" font-size="13" fill="#64748b" font-weight="bold">k = 1.0 (無變形)</text>
+            <path d="M 160,110 Q 400,260 640,110" fill="none" stroke="#2563eb" stroke-width="3.5"/>
+            <circle cx="400" cy="222" r="5" fill="#dc2626"/>
+            <rect x="300" y="235" width="200" height="30" rx="4" fill="#ffffff" stroke="#dc2626" stroke-width="1"/>
+            <text x="400" y="255" text-anchor="middle" font-size="13" fill="#dc2626" font-weight="bold">k₀ = 0.9996 (負壓縮變形)</text>
+            <circle cx="270" cy="180" r="5" fill="#16a34a"/>
+            <circle cx="530" cy="180" r="5" fill="#16a34a"/>
+            <text x="240" y="165" font-size="12" fill="#15803d" font-weight="bold">割線 1 (k=1.0)</text>
+            <text x="530" y="165" font-size="12" fill="#15803d" font-weight="bold">割線 2 (k=1.0)</text>
+            <text x="140" y="95" font-size="12" fill="#1d4ed8" font-weight="bold">邊界 k ≈ 1.001</text>
+            <text x="630" y="95" font-size="12" fill="#1d4ed8" font-weight="bold">邊界 k ≈ 1.001</text>
+          </svg>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span class="source-tag">文獻依據：<b>wiki/topic_11</b> (raw/04.md.md 6.6 節、raw/01.pdf.pdf)</span>
+        <div class="keyboard-hint">切換：<span class="key-cap">←</span> <span class="key-cap">→</span></div>
+      </div>
+    </div>
+
+    <!-- ==================== SLIDE 28 ==================== -->
+    <div class="slide" data-slide="28" data-unit="第五單元：基準轉換與地圖投影" data-source="wiki/topic_11_UTM投影與臺灣TM2分帶系統.md">
+      <div class="slide-header">
+        <div class="header-left">
+          <span class="unit-badge">第五單元：基準轉換與地圖投影</span>
+          <h2 class="slide-title">28. 守護人民產權的萬分之一——臺灣橫麥卡托 TM2° 投影</h2>
+        </div>
+        <div class="slide-counter"><span>28</span> / 29</div>
+      </div>
+      <div class="slide-body">
+        <div class="narrative-col">
+          <div class="analogy-card">
+            <div class="analogy-title">💡 零基礎白話比喻</div>
+            <div class="analogy-text">買了 100 坪土地，如果用 6 度軍用 UTM 量，邊緣變形千分之一可能讓產權縮水幾坪！所以臺灣地籍必須用 2 度分帶（TM2°），中央線只縮小萬分之一（0.9999），誓死捍衛私有產權！</div>
+          </div>
+          <div class="key-points-card">
+            <h4>📌 臺灣 TM2° 核心投影參數</h4>
+            <ul>
+              <li><b>中央子午線</b>：臺灣本島與附屬島嶼為 <b>121°E</b> ； 澎湖金門馬祖離島為 <b>119°E</b>。</li>
+              <li><b>尺度比</b>：k₀ = 0.9999 （尺度誤差控制在 1/10,000 ~ 1/20,000 之內）。</li>
+              <li><b>假東偏移</b>：中央子午線向西平移 250,000 m。</li>
+              <li><b>地面距離換算</b>：地表實際水平長度 ≈ 網格距離 / 0.9999。</li>
+            </ul>
+          </div>
+          <div class="formula-badge">TM2° 規格：本島 121°E / 離島 119°E ； k₀ = 0.9999 ； 假東 250,000 m</div>
+        </div>
+        <div class="visual-col">
+          <svg viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+            <rect width="800" height="400" fill="#f8fafc" rx="12"/>
+            <line x1="240" y1="40" x2="240" y2="350" stroke="#0284c7" stroke-width="2.5" stroke-dasharray="6,3"/>
+            <text x="240" y="30" text-anchor="middle" font-size="13" fill="#0369a1" font-weight="bold">離島 119°E (澎金馬)</text>
+            <circle cx="240" cy="180" r="5" fill="#0284c7"/>
+            <text x="250" y="185" font-size="11" fill="#0369a1">澎湖群島</text>
+            <path d="M 460,80 Q 490,130 480,210 Q 460,290 440,310 Q 420,260 430,180 Z" fill="#dcfce7" stroke="#15803d" stroke-width="2.5"/>
+            <line x1="460" y1="40" x2="460" y2="350" stroke="#dc2626" stroke-width="3.5"/>
+            <text x="460" y="30" text-anchor="middle" font-size="14" fill="#dc2626" font-weight="bold">本島中央子午線 121°E (k₀ = 0.9999)</text>
+            <line x1="390" y1="60" x2="390" y2="330" stroke="#94a3b8" stroke-dasharray="4,4" stroke-width="1.5"/>
+            <text x="360" y="345" font-size="12" fill="#64748b">120°E</text>
+            <line x1="530" y1="60" x2="530" y2="330" stroke="#94a3b8" stroke-dasharray="4,4" stroke-width="1.5"/>
+            <text x="535" y="345" font-size="12" fill="#64748b">122°E</text>
+            <rect x="550" y="140" width="230" height="90" rx="8" fill="#ffffff" stroke="#16a34a" stroke-width="1.5"/>
+            <text x="565" y="165" font-size="14" fill="#15803d" font-weight="bold">為什麼地籍必用 TM2°？</text>
+            <text x="565" y="190" font-size="12" fill="#334155">變形極限壓在萬分之一以內，</text>
+            <text x="565" y="210" font-size="12" fill="#334155">確保土地權利與面積毫釐不差！</text>
+          </svg>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span class="source-tag">文獻依據：<b>wiki/topic_11</b> (raw/04.md.md 台灣分帶、raw/01.pdf.pdf)</span>
+        <div class="keyboard-hint">切換：<span class="key-cap">←</span> <span class="key-cap">→</span></div>
+      </div>
+    </div>
+
+    <!-- ==================== SLIDE 29 ==================== -->
+    <div class="slide" data-slide="29" data-unit="第五單元：基準轉換與地圖投影" data-source="wiki/index.md">
+      <div class="slide-header">
+        <div class="header-left">
+          <span class="unit-badge">課程全景總結</span>
+          <h2 class="slide-title">29. 課程全景總結——大地測量學的幾何與物理知識網絡</h2>
+        </div>
+        <div class="slide-counter"><span>29</span> / 29</div>
+      </div>
+      <div class="slide-body">
+        <div class="narrative-col">
+          <div class="analogy-card">
+            <div class="analogy-title">💡 零基礎白話比喻</div>
+            <div class="analogy-text">恭喜你完成大地測量學的宏偉探索！我們從旋轉地球形狀出發，理解了重力場無形之手，在太空陀螺中用原子鐘定時間，為地球套上精密橢球，最後把曲面攤平為地圖。這就是現代衛星導航與國土測繪的堅實基石！</div>
+          </div>
+          <div class="key-points-card">
+            <h4>📌 四大支柱與時空互鎖網絡</h4>
+            <ul>
+              <li><b>幾何與物理融合</b>：旋轉橢球幾何（GRS80）＋ 重力等位面（大地水準面）。</li>
+              <li><b>時間與空間互鎖</b>：銫原子秒長 ＋ 光速測距 ＋ EOP 地球定向轉換。</li>
+              <li><b>現代動態演化</b>：TWD67 參心 ➔ TWD97 地心 ➔ TTRF CORS 即時動態。</li>
+              <li><b>工程圖紙落地</b>：高斯正形柯西－黎曼條件 ➔ TM2° 萬分之一地籍保障。</li>
+            </ul>
+          </div>
+          <div class="formula-badge">學程完結：建立完整大地測量與空間資訊系統（GIS）幾何物理架構！</div>
+        </div>
+        <div class="visual-col">
+          <svg viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+            <rect width="800" height="400" fill="#f8fafc" rx="12"/>
+            <rect x="60" y="70" width="140" height="70" rx="8" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+            <text x="130" y="100" text-anchor="middle" font-size="14" fill="#1e40af" font-weight="bold">1. 地球幾何形狀</text>
+            <text x="130" y="122" text-anchor="middle" font-size="11" fill="#475569">旋轉橢球 / 梨形</text>
+            <rect x="60" y="220" width="140" height="70" rx="8" fill="#fef3c7" stroke="#b45309" stroke-width="2"/>
+            <text x="130" y="250" text-anchor="middle" font-size="14" fill="#78350f" font-weight="bold">2. 地球重力場</text>
+            <text x="130" y="272" text-anchor="middle" font-size="11" fill="#475569">大地水準面 / 正常位</text>
+            <rect x="600" y="70" width="140" height="70" rx="8" fill="#fce7f3" stroke="#be185d" stroke-width="2"/>
+            <text x="670" y="100" text-anchor="middle" font-size="14" fill="#831843" font-weight="bold">3. 空間運動與時間</text>
+            <text x="670" y="122" text-anchor="middle" font-size="11" fill="#475569">歲差章動 / 原子時</text>
+            <rect x="600" y="220" width="140" height="70" rx="8" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+            <text x="670" y="250" text-anchor="middle" font-size="14" fill="#14532d" font-weight="bold">4. 基準與地圖投影</text>
+            <text x="670" y="272" text-anchor="middle" font-size="11" fill="#475569">TWD97 / TM2°</text>
+            <circle cx="400" cy="180" r="60" fill="#0284c7" stroke="#0369a1" stroke-width="3"/>
+            <text x="400" y="175" text-anchor="middle" font-size="15" fill="#ffffff" font-weight="bold">大地測量學</text>
+            <text x="400" y="195" text-anchor="middle" font-size="13" fill="#ffffff">現代時空基底</text>
+            <line x1="200" y1="105" x2="340" y2="150" stroke="#0284c7" stroke-width="2"/>
+            <line x1="200" y1="255" x2="340" y2="210" stroke="#0284c7" stroke-width="2"/>
+            <line x1="600" y1="105" x2="460" y2="150" stroke="#0284c7" stroke-width="2"/>
+            <line x1="600" y1="255" x2="460" y2="210" stroke="#0284c7" stroke-width="2"/>
+          </svg>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span class="source-tag">文獻依據：<b>wiki/index.md</b> (大地測量學全體 11 主題條目)</span>
+        <div class="keyboard-hint">切換：<span class="key-cap">←</span> <span class="key-cap">→</span></div>
+      </div>
+    </div>
+
+  </div> <!-- /#deck-wrapper -->
+
+  <!-- 底部懸浮按鈕與下拉選單 -->
+  <div id="nav-controls">
+    <button class="nav-btn" id="prev-btn" onclick="prevSlide()">◀ 上一頁</button>
+    <select id="jump-select" onchange="jumpToSlide(parseInt(this.value))">
+      <!-- JS 動態生成選項 -->
+    </select>
+    <button class="nav-btn" id="next-btn" onclick="nextSlide()">下一頁 ▶</button>
+    <button class="nav-btn" id="fs-btn" onclick="toggleFullScreen()">⛶ 全螢幕</button>
+  </div>
+
+  <script>
+    let currentSlide = 1;
+    const totalSlides = 29;
+    const slides = document.querySelectorAll('.slide');
+    const progressBar = document.getElementById('progress-bar');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const jumpSelect = document.getElementById('jump-select');
+
+    // 初始化下拉選項
+    function initJumpSelect() {
+      slides.forEach((s, idx) => {
+        const slideNum = idx + 1;
+        const title = s.querySelector('.slide-title').innerText;
+        const opt = document.createElement('option');
+        opt.value = slideNum;
+        opt.textContent = `${slideNum < 10 ? '0' + slideNum : slideNum}. ${title.replace(/^\d+\.\s*/, '')}`;
+        jumpSelect.appendChild(opt);
+      });
+    }
+
+    function showSlide(index) {
+      if (index < 1) index = 1;
+      if (index > totalSlides) index = totalSlides;
+      currentSlide = index;
+
+      slides.forEach(s => s.classList.remove('active'));
+      const activeSlide = document.querySelector(`.slide[data-slide="${currentSlide}"]`);
+      if (activeSlide) {
+        activeSlide.classList.add('active');
+        activeSlide.scrollTop = 0;
+      }
+
+      // 更新進度條
+      const pct = (currentSlide / totalSlides) * 100;
+      progressBar.style.width = pct + '%';
+
+      // 更新按鈕狀態
+      prevBtn.disabled = (currentSlide === 1);
+      nextBtn.disabled = (currentSlide === totalSlides);
+      jumpSelect.value = currentSlide;
+    }
+
+    function nextSlide() {
+      if (currentSlide < totalSlides) {
+        showSlide(currentSlide + 1);
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlide > 1) {
+        showSlide(currentSlide - 1);
+      }
+    }
+
+    function jumpToSlide(num) {
+      showSlide(num);
+    }
+
+    function toggleFullScreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen().catch(() => {});
+        }
+      }
+    }
+
+    // 鍵盤事件監聽
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        e.preventDefault();
+        nextSlide();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        e.preventDefault();
+        prevSlide();
+      } else if (e.key === 'Home') {
+        e.preventDefault();
+        showSlide(1);
+      } else if (e.key === 'End') {
+        e.preventDefault();
+        showSlide(totalSlides);
+      } else if (e.key === 'f' || e.key === 'F') {
+        toggleFullScreen();
+      }
+    });
+
+    // 觸控手勢翻頁支援
+    let touchStartX = 0;
+    let touchEndX = 0;
+    document.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+    }, false);
+    document.addEventListener('touchend', (e) => {
+      touchEndX = e.changedTouches[0].screenX;
+      handleSwipe();
+    }, false);
+
+    function handleSwipe() {
+      const diff = touchEndX - touchStartX;
+      if (Math.abs(diff) > 50) {
+        if (diff < 0) nextSlide();
+        else prevSlide();
+      }
+    }
+
+    // 初始化啟動
+    initJumpSelect();
+    showSlide(1);
+  </script>
+</body>
+</html>
